@@ -117,17 +117,23 @@ export function getLoadingContent(statusMessages: StatusMessage[]): string {
                 ${msg.text}
               </div>
             `).join('')}
-            <button class="danger-button" onclick="vscode.postMessage({ command: 'cancel' })">
+            <button class="danger-button" onclick="cancelAnalysis()">
               Cancel Analysis
             </button>
           </div>
         </div>
       </div>
+      <script>
+        const vscode = acquireVsCodeApi();
+        function cancelAnalysis() {
+          vscode.postMessage({ command: 'cancel' });
+        }
+      </script>
     </body>
     </html>`;
 }
 
-export function getErrorContent(title: string, messages: string[], showSetupButton: boolean = false): string {
+export function getErrorContent(title: string, messages: string[], showSetupButton: boolean = true): string {
   return `<!DOCTYPE html>
     <html>
     <head>
@@ -140,13 +146,19 @@ export function getErrorContent(title: string, messages: string[], showSetupButt
             <h2 class="text-2xl font-bold text-red-600 mb-4">${title}</h2>
             ${messages.map(msg => `<div class="status error">${msg}</div>`).join('')}
             ${showSetupButton ? `
-              <button class="primary-button" onclick="vscode.postMessage({ command: 'showSetup' })">
+              <button class="primary-button" onclick="openSetupGuide()">
                 Show Setup Guide
               </button>
             ` : ''}
           </div>
         </div>
       </div>
+      <script>
+        const vscode = acquireVsCodeApi();
+        function openSetupGuide() {
+          vscode.postMessage({ command: 'showSetup' });
+        }
+      </script>
     </body>
     </html>`;
 }
@@ -163,7 +175,7 @@ export function getResultsContent(output: string): string {
           <div class="inner-content">
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-xl font-bold">Analysis Results</h2>
-              <button class="primary-button" onclick="vscode.postMessage({ command: 'copy', text: document.querySelector('pre').textContent })">
+              <button class="primary-button" onclick="copyOutput()">
                 <div class="flex items-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -179,6 +191,13 @@ export function getResultsContent(output: string): string {
           </div>
         </div>
       </div>
+      <script>
+        const vscode = acquireVsCodeApi();
+        function copyOutput() {
+          const output = document.querySelector('pre').innerText;
+          vscode.postMessage({ command: 'copy', text: output });
+        }
+      </script>
     </body>
     </html>`;
 }

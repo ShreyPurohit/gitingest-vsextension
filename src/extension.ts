@@ -86,6 +86,9 @@ function handleWebviewMessage(
 				vscode.window.showInformationMessage('Analysis output copied to clipboard!');
 			}
 			break;
+		case 'showSetup':
+			handleSetup();
+			break;
 	}
 }
 
