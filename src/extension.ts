@@ -16,13 +16,23 @@ const execAsync = promisify(exec);
 export function activate(context: vscode.ExtensionContext) {
 	let currentProcess: ChildProcess | null = null;
 
+	const statusBarItem = vscode.window.createStatusBarItem(
+		vscode.StatusBarAlignment.Right, 101
+	);
+	statusBarItem.name = "GitIngest";
+	statusBarItem.text = "$(git-merge) GitIngest";
+	statusBarItem.tooltip = "Analyze Repository with GitIngest";
+	statusBarItem.command = COMMANDS.analyze;
+	statusBarItem.show();
+
 	// Register commands
 	const commands = [
 		vscode.commands.registerCommand(COMMANDS.setup, handleSetup),
 		vscode.commands.registerCommand(COMMANDS.analyze, () => handleAnalyze(currentProcess))
 	];
 
-	context.subscriptions.push(...commands);
+	// Add status bar item to subscriptions for proper disposal
+	context.subscriptions.push(...commands, statusBarItem);
 }
 
 async function handleSetup(): Promise<void> {
