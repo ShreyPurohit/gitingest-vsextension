@@ -1,12 +1,13 @@
-import * as vscode from 'vscode';
-import { exec, ChildProcess, ExecException } from 'child_process';
+import { ChildProcess, exec, execSync } from 'child_process';
+import path from 'path';
 import { promisify } from 'util';
-import { WebviewMessage, ExecResult, StatusMessage } from './types';
+import * as vscode from 'vscode';
 import { COMMANDS, ERROR_MESSAGES, WEBVIEW_OPTIONS } from './config';
-import { killProcess, getPythonCommand } from './utils/process';
+import { AnalysisResult, StatusMessage, WebviewMessage } from './types';
+import { getPythonCommand, killProcess } from './utils/process';
 import {
-	getLoadingContent,
 	getErrorContent,
+	getLoadingContent,
 	getResultsContent,
 	getSetupGuideContent
 } from './webview/templates';
@@ -71,7 +72,7 @@ async function handleAnalyze(currentProcessRef: ChildProcess | null): Promise<vo
 
 	try {
 		await verifyDependencies(panel);
-		await runAnalysis(panel, currentProcessRef);
+		await runAnalysis(panel);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
 		panel.webview.html = getErrorContent('Analysis Failed', [errorMessage]);
@@ -132,9 +133,26 @@ async function verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
 	return;
 }
 
+async function getOutput(repoPath: string): Promise<AnalysisResult> {
+	try {
+		const scriptPath = path.join(__dirname, "..", "src", "gitingest-script.py");
+		const stdout = execSync(`${getPythonCommand()} "${scriptPath}" "${repoPath}"`);
+		const result = JSON.parse(stdout.toString());
+		return {
+			type: "success",
+			data: result as { summary: string, content: string, tree: string }
+		};
+	} catch (error) {
+		console.error(`exec error: ${error}`);
+		return {
+			type: "error",
+			message: "Execution failed"
+		};
+	}
+}
+
 async function runAnalysis(
 	panel: vscode.WebviewPanel,
-	currentProcessRef: ChildProcess | null
 ): Promise<void> {
 	const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 	if (!workspaceFolder) {
@@ -147,21 +165,15 @@ async function runAnalysis(
 		{ text: 'Analyzing repository...', type: 'info' }
 	]);
 
-	return new Promise((resolve, reject) => {
-		currentProcessRef = exec(
-			`gitingest "${workspaceFolder.uri.fsPath}"`,
-			{ windowsHide: true },
-			(error: ExecException | null, stdout: string, stderr: string) => {
-				currentProcessRef = null;
-				if (error) {
-					reject(error);
-					return;
-				}
-				panel.webview.html = getResultsContent(stdout);
-				resolve();
-			}
-		);
-	});
-}
+	const result = await getOutput(workspaceFolder.uri.fsPath);
 
-export function deactivate(): void { }
+	if (result.type === "error") {
+		throw new Error(result.message);
+	}
+
+	if (result.data) {
+		panel.webview.html = getResultsContent(result.data);
+	} else {
+		throw new Error("Analysis result data is undefined");
+	}
+}

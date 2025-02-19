@@ -4,11 +4,6 @@ export interface WebviewMessage {
     text?: string;
 }
 
-export interface ExecResult {
-    stdout: string;
-    stderr: string;
-}
-
 // Configuration types
 export interface ThemeColors {
     primary: string;
@@ -23,4 +18,14 @@ export interface ThemeColors {
 export interface StatusMessage {
     text: string;
     type: 'info' | 'success' | 'error' | 'warning';
+}
+
+export interface AnalysisResult {
+    type: 'success' | 'error';
+    data?: {
+        summary: string;
+        tree: string;
+        content: string;
+    };
+    message?: string;
 }
