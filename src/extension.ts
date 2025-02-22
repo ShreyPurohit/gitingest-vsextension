@@ -14,7 +14,11 @@ import {
 
 const execAsync = promisify(exec);
 
+let scriptPath = '';
+
 export function activate(context: vscode.ExtensionContext) {
+	scriptPath = context.asAbsolutePath(path.join('src', 'gitingest-script.py'));
+
 	let currentProcess: ChildProcess | null = null;
 
 	const statusBarItem = vscode.window.createStatusBarItem(
@@ -135,7 +139,6 @@ async function verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
 
 async function getOutput(repoPath: string): Promise<AnalysisResult> {
 	try {
-		const scriptPath = path.join(__dirname, "..", "src", "gitingest-script.py");
 		const stdout = execSync(`${getPythonCommand()} "${scriptPath}" "${repoPath}"`);
 		const result = JSON.parse(stdout.toString());
 		return {

@@ -3,7 +3,7 @@ import { platform } from 'os';
 import { ERROR_MESSAGES } from '../config';
 
 export function killProcess(process: ChildProcess): void {
-    if (!process.pid) return;
+    if (!process.pid) { return; }
 
     try {
         if (platform() === 'win32') {

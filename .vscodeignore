@@ -3,6 +3,7 @@
 out/**
 node_modules/**
 src/**
+!src/gitingest-script.py
 .gitignore
 .yarnrc
 esbuild.js
