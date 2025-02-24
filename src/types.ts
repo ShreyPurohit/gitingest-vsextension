@@ -1,6 +1,6 @@
 // Message types
 export interface WebviewMessage {
-    command: 'cancel' | 'copy' | 'showSetup';
+    command: 'cancel' | 'copy' | 'showSetup' | 'saveToFile' | 'retry';
     text?: string;
 }
 

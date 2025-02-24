@@ -1,10 +1,11 @@
-import { ChildProcess, exec, execSync } from 'child_process';
+import { exec } from 'child_process';
 import path from 'path';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { COMMANDS, ERROR_MESSAGES, WEBVIEW_OPTIONS } from './config';
 import { AnalysisResult, StatusMessage, WebviewMessage } from './types';
-import { getPythonCommand, killProcess } from './utils/process';
+import { getPythonCommand } from './utils/process';
+import { processManager } from './utils/processManager';
 import {
 	getErrorContent,
 	getLoadingContent,
@@ -19,8 +20,6 @@ let scriptPath = '';
 export function activate(context: vscode.ExtensionContext) {
 	scriptPath = context.asAbsolutePath(path.join('src', 'gitingest-script.py'));
 
-	let currentProcess: ChildProcess | null = null;
-
 	const statusBarItem = vscode.window.createStatusBarItem(
 		vscode.StatusBarAlignment.Right, 101
 	);
@@ -33,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register commands
 	const commands = [
 		vscode.commands.registerCommand(COMMANDS.setup, handleSetup),
-		vscode.commands.registerCommand(COMMANDS.analyze, () => handleAnalyze(currentProcess))
+		vscode.commands.registerCommand(COMMANDS.analyze, handleAnalyze)
 	];
 
 	// Add status bar item to subscriptions for proper disposal
@@ -51,25 +50,24 @@ async function handleSetup(): Promise<void> {
 	panel.webview.html = getSetupGuideContent();
 }
 
-async function handleAnalyze(currentProcessRef: ChildProcess | null): Promise<void> {
-	const panel = vscode.window.createWebviewPanel(
-		'gitingestResults',
-		'GitIngest Analysis',
-		vscode.ViewColumn.One,
-		WEBVIEW_OPTIONS
-	);
+async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
+	if (!panel) {
+		panel = vscode.window.createWebviewPanel(
+			'gitingestResults',
+			'GitIngest Analysis',
+			vscode.ViewColumn.One,
+			WEBVIEW_OPTIONS
+		);
+	}
 
 	// Clean up when the panel is closed
 	panel.onDidDispose(() => {
-		if (currentProcessRef?.pid) {
-			killProcess(currentProcessRef);
-			currentProcessRef = null;
-		}
+		processManager.killCurrentProcess().catch(console.error);
 	});
 
 	// Handle messages from the webview
 	panel.webview.onDidReceiveMessage(
-		(message: WebviewMessage) => handleWebviewMessage(message, panel, currentProcessRef),
+		(message: WebviewMessage) => handleWebviewMessage(message, panel!),
 		undefined,
 		[]
 	);
@@ -83,27 +81,77 @@ async function handleAnalyze(currentProcessRef: ChildProcess | null): Promise<vo
 	}
 }
 
-function handleWebviewMessage(
+async function handleWebviewMessage(
 	message: WebviewMessage,
 	panel: vscode.WebviewPanel,
-	currentProcess: ChildProcess | null
-): void {
+): Promise<void> {
 	switch (message.command) {
 		case 'cancel':
-			if (currentProcess?.pid) {
-				killProcess(currentProcess);
+			try {
+				await processManager.killCurrentProcess();
 				panel.dispose();
+				vscode.window.showInformationMessage('Analysis cancelled');
+			} catch (error) {
+				vscode.window.showErrorMessage('Failed to cancel analysis');
 			}
 			break;
+
 		case 'copy':
 			if (message.text) {
-				vscode.env.clipboard.writeText(message.text);
+				await vscode.env.clipboard.writeText(message.text);
 				vscode.window.showInformationMessage('Analysis output copied to clipboard!');
 			}
 			break;
+
 		case 'showSetup':
-			handleSetup();
+			await handleSetup();
 			break;
+
+		case 'saveToFile':
+			await handleSaveToFile();
+			break;
+
+		case 'retry':
+			try {
+				await processManager.killCurrentProcess();
+				await handleAnalyze(panel);
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
+				panel.webview.html = getErrorContent('Retry Failed', [errorMessage]);
+			}
+			break;
+	}
+}
+
+async function handleSaveToFile(): Promise<void> {
+	const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+	if (!workspaceFolder) {
+		vscode.window.showErrorMessage(ERROR_MESSAGES.NO_WORKSPACE);
+		return;
+	}
+
+	try {
+		const result = await getOutput(workspaceFolder.uri.fsPath);
+		if (result.type === "success" && result.data) {
+			const filePath = path.join(workspaceFolder.uri.fsPath, 'digest.txt');
+			const content = [
+				'# Repository Analysis\n',
+				'## Summary\n',
+				result.data.summary,
+				'\n## Directory Structure\n',
+				result.data.tree,
+				'\n## Files Content\n',
+				result.data.content
+			].join('\n');
+
+			await vscode.workspace.fs.writeFile(
+				vscode.Uri.file(filePath),
+				Buffer.from(content, 'utf8')
+			);
+			vscode.window.showInformationMessage(`Analysis saved to ${filePath}`);
+		}
+	} catch (error) {
+		vscode.window.showErrorMessage('Failed to save analysis to file');
 	}
 }
 
@@ -133,18 +181,47 @@ async function verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
 	} catch {
 		throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
 	}
-
-	return;
 }
 
 async function getOutput(repoPath: string): Promise<AnalysisResult> {
 	try {
-		const stdout = execSync(`${getPythonCommand()} "${scriptPath}" "${repoPath}"`);
-		const result = JSON.parse(stdout.toString());
-		return {
-			type: "success",
-			data: result as { summary: string, content: string, tree: string }
-		};
+		const process = exec(`${getPythonCommand()} "${scriptPath}" "${repoPath}"`);
+		processManager.setProcess(process);
+
+		return new Promise((resolve, reject) => {
+			let stdout = '';
+			let stderr = '';
+
+			process.stdout?.on('data', (data) => {
+				stdout += data;
+			});
+
+			process.stderr?.on('data', (data) => {
+				stderr += data;
+			});
+
+			process.on('close', (code) => {
+				processManager.clear();
+				if (code === 0 && stdout) {
+					try {
+						const result = JSON.parse(stdout);
+						resolve({
+							type: "success",
+							data: result
+						});
+					} catch (error) {
+						reject(new Error("Failed to parse analysis output"));
+					}
+				} else {
+					reject(new Error(stderr || "Analysis failed"));
+				}
+			});
+
+			process.on('error', (error) => {
+				processManager.clear();
+				reject(error);
+			});
+		});
 	} catch (error) {
 		console.error(`exec error: ${error}`);
 		return {
