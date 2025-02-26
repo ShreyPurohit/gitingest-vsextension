@@ -1,8 +1,8 @@
 # GitIngest VS Code Extension 🔍
 
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/your-publisher.gitingest-vscode)](https://marketplace.visualstudio.com/items?itemName=your-publisher.gitingest-vscode)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/your-publisher.gitingest-vscode)](https://marketplace.visualstudio.com/items?itemName=your-publisher.gitingest-vscode)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/your-publisher.gitingest-vscode)](https://marketplace.visualstudio.com/items?itemName=your-publisher.gitingest-vscode)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest-vscode)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest-vscode)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/iamshreydxv.gitingest-vscode)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode)
 
 Seamlessly integrate GitIngest into your VS Code workflow with a modern, intuitive interface. Analyze your Git repositories directly within your editor and get comprehensive insights about your codebase.
 
