@@ -1,14 +1,14 @@
 <h1 align="center">🚀 GitIngest VS Code Extension</h1>  
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest-vscode" alt="Marketplace Version"/>
+  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest" alt="Marketplace Version"/>
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode">
-    <img src="https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest-vscode" alt="Downloads"/>
+  <a href="https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest?cacheSeconds=3600">
+    <img src="https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest?cacheSeconds=3600" alt="Downloads"/>
   </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode">
-    <img src="https://img.shields.io/visual-studio-marketplace/r/iamshreydxv.gitingest-vscode" alt="Ratings"/>
+  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">
+    <img src="https://img.shields.io/visual-studio-marketplace/r/iamshreydxv.gitingest" alt="Ratings"/>
   </a>
 </p>
 
@@ -58,7 +58,7 @@
 
 ### 🔹 Install the Extension  
 
-1. Install from the <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest-vscode">VS Code Marketplace</a>.  
+1. Install from the <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">VS Code Marketplace</a>.  
 2. Install required Python dependencies:  
 
 ```bash

@@ -3,9 +3,9 @@
   "displayName": "Gitingest",
   "description": "Turn any repository into a simple text digest of its codebase.",
   "version": "0.0.1",
-  "publisher": "ShreyPurohit",
+  "publisher": "iamshreydxv",
   "engines": {
-    "vscode": "^1.96.0"
+    "vscode": "^1.54.0"
   },
   "icon": "assets/gitingest-icon.png",
   "categories": [
@@ -37,7 +37,7 @@
     "lint": "eslint src"
   },
   "devDependencies": {
-    "@types/vscode": "^1.96.0",
+    "@types/vscode": "^1.54.0",
     "@types/node": "20.x",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.7.0",
@@ -74,14 +74,14 @@
   },
   "galleryBanner": {
     "color": "#fff4da",
-    "theme": "dark"
+    "theme": "light"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ShreyPurohit/VS-Ingest"
+    "url": "https://github.com/ShreyPurohit/gitingest-vsextension"
   },
   "bugs": {
-    "url": "https://github.com/ShreyPurohit/VS-Ingest/issues",
+    "url": "https://github.com/ShreyPurohit/gitingest-vsextension/issues",
     "email": "purohitshrey9@gmail.com"
   },
   "homepage": "https://gitingest.com/",
