@@ -46,6 +46,12 @@
 ✅ Command Palette support ( `Ctrl/Cmd + Shift + P` ).  
 ✅ Works across Windows, macOS, and Linux.  
 
+### Analyzing a Specific Folder
+
+✅ Right-click on any folder in the Explorer view.  
+✅ Select "GitIngest: Analyze This Folder" from the context menu.  
+✅ View the analysis results specific to that folder.
+
 <hr style="border: 2px solid black; width: 100%;" />
 
 ## 🏗️ Installation & Setup  
@@ -75,14 +81,17 @@ pip3 install gitingest
 
 ### Start GitIngest  
 
-**Via Status Bar:** Click the GitIngest icon for one-click access. 
+1. **Via Explorer:** Right click on any specific folder and choose `Gitingest: Analyze this folder`
+
+<img src="./assets/Context-Menu.gif" alt="Context Click Activation" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); "><br>
+
+2. **Via Status Bar:** Click the GitIngest icon for one-click access. 
 
 <img src="./assets/SingleClickOn.gif" alt="Single Click Activation" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); "><br>
 
-**Via Command Palette (`Ctrl/Cmd + Shift + P`)**  
-
-  + Run **`GitIngest: Analyze Repository`** to start analysis.  
-  + Run **`GitIngest: Show Setup Guide`** for setup help.  
+3. **Via Command Palette (`Ctrl/Cmd + Shift + P`)**  
+   + Run **`GitIngest: Analyze Repository`** to start analysis.  
+   + Run **`GitIngest: Show Setup Guide`** for setup help.  
 
 <img src="./assets/SetupGuide.gif" alt="Setup Guide" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">  
 

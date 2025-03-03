@@ -12,7 +12,8 @@ export const THEME: ThemeColors = {
 
 export const COMMANDS = {
     setup: 'vscode-gitingest.setup',
-    analyze: 'vscode-gitingest.analyze'
+    analyze: 'vscode-gitingest.analyze',
+    analyzeFolder: 'vscode-gitingest.analyzeFolder'
 } as const;
 
 export const WEBVIEW_OPTIONS = {
@@ -25,5 +26,6 @@ export const ERROR_MESSAGES = {
     GITINGEST_NOT_INSTALLED: 'GitIngest is not installed',
     NO_WORKSPACE: 'No workspace folder open',
     PROCESS_KILL_FAILED: 'Failed to kill process',
-    UNKNOWN_ERROR: 'An unknown error occurred'
+    UNKNOWN_ERROR: 'An unknown error occurred',
+    INVALID_FOLDER: 'Invalid folder selected'
 } as const;

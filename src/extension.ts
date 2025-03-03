@@ -67,7 +67,8 @@ function createStatusBarItem(): vscode.StatusBarItem {
 function registerCommands(): vscode.Disposable[] {
 	return [
 		vscode.commands.registerCommand(COMMANDS.setup, handleSetup),
-		vscode.commands.registerCommand(COMMANDS.analyze, handleAnalyze)
+		vscode.commands.registerCommand(COMMANDS.analyze, handleAnalyze),
+		vscode.commands.registerCommand(COMMANDS.analyzeFolder, handleAnalyzeFolder)
 	];
 }
 
@@ -142,7 +143,53 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
 	try {
 		// Verify dependencies and run analysis
 		await verifyDependencies(panel);
-		await runAnalysis(panel);
+
+		const workspaceFolder = getWorkspaceFolder();
+		if (!workspaceFolder) {
+			throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
+		}
+
+		await runAnalysisOnPath(panel, workspaceFolder.uri.fsPath, 'Analyzing repository...');
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
+		panel.webview.html = getErrorContent('Analysis Failed', [errorMessage]);
+	}
+}
+
+/**
+ * Handles the analyzeFolder command triggered from the context menu
+ * @param folderUri The URI of the folder to analyze
+ */
+async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
+	if (!folderUri) {
+		vscode.window.showErrorMessage(ERROR_MESSAGES.INVALID_FOLDER);
+		return;
+	}
+
+	const folderName = path.basename(folderUri.fsPath);
+	const panel = vscode.window.createWebviewPanel(
+		'gitingestResults',
+		`GitIngest: ${folderName}`,
+		vscode.ViewColumn.One,
+		WEBVIEW_OPTIONS
+	);
+
+	// Clean up resources when the panel is closed
+	panel.onDidDispose(() => {
+		processManager.killCurrentProcess().catch(logError);
+	});
+
+	// Set up message handling
+	panel.webview.onDidReceiveMessage(
+		(message: WebviewMessage) => handleWebviewMessage(message, panel),
+		undefined,
+		[]
+	);
+
+	try {
+		// Verify dependencies and run analysis on the specific folder
+		await verifyDependencies(panel);
+		await runAnalysisOnPath(panel, folderUri.fsPath, `Analyzing folder: ${folderName}...`);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
 		panel.webview.html = getErrorContent('Analysis Failed', [errorMessage]);
@@ -313,24 +360,25 @@ async function verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
 }
 
 /**
- * Runs the analysis on the current repository
+ * Runs the analysis on a specific path (folder or repository)
  * @param panel The webview panel to update with results
+ * @param targetPath The path to analyze
+ * @param statusMessage The status message to display during analysis
  */
-async function runAnalysis(panel: vscode.WebviewPanel): Promise<void> {
-	const workspaceFolder = getWorkspaceFolder();
-	if (!workspaceFolder) {
-		throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
-	}
-
+async function runAnalysisOnPath(
+	panel: vscode.WebviewPanel,
+	targetPath: string,
+	statusMessage: string
+): Promise<void> {
 	// Show loading status
 	panel.webview.html = getLoadingContent([
 		{ text: 'Python installation verified ✓', type: 'success' },
 		{ text: 'GitIngest package verified ✓', type: 'success' },
-		{ text: 'Analyzing repository...', type: 'info' }
+		{ text: statusMessage, type: 'info' }
 	]);
 
 	// Run the analysis
-	const result = await getOutput(workspaceFolder.uri.fsPath);
+	const result = await getOutput(targetPath);
 
 	if (result.type === "error") {
 		throw new Error(result.message);

@@ -2,7 +2,7 @@
   "name": "gitingest",
   "displayName": "Gitingest",
   "description": "Turn any repository into a simple text digest of its codebase.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "iamshreydxv",
   "engines": {
     "vscode": "^1.54.0"
@@ -23,8 +23,21 @@
       {
         "command": "vscode-gitingest.setup",
         "title": "GitIngest: Setup Requirements"
+      },
+      {
+        "command": "vscode-gitingest.analyzeFolder",
+        "title": "GitIngest: Analyze This Folder"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "vscode-gitingest.analyzeFolder",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -80,6 +93,7 @@
     "type": "git",
     "url": "https://github.com/ShreyPurohit/gitingest-vsextension"
   },
+  "qna": "https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest&ssr=false#qna",
   "bugs": {
     "url": "https://github.com/ShreyPurohit/gitingest-vsextension/issues",
     "email": "purohitshrey9@gmail.com"

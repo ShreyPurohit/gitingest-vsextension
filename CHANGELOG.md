@@ -1,4 +1,5 @@
 # Change Log
 
 ### Added
-- Initial release
+- v0.1 Initial release
+- v0.2 Added Context Menu Support
