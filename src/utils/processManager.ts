@@ -1,6 +1,6 @@
-import { ChildProcess } from 'child_process';
+import { ChildProcess, exec } from 'child_process';
+import { platform } from 'os';
 import { ERROR_MESSAGES } from '../config';
-import { killProcess } from './process';
 
 class ProcessManager {
     private currentProcess: ChildProcess | null = null;
@@ -19,7 +19,11 @@ class ProcessManager {
         }
 
         try {
-            killProcess(this.currentProcess);
+            if (platform() === 'win32') {
+                exec(`taskkill /pid ${this.currentProcess.pid} /T /F`);
+            } else {
+                this.currentProcess.kill('SIGTERM');
+            }
             this.currentProcess = null;
         } catch (error) {
             console.error(ERROR_MESSAGES.PROCESS_KILL_FAILED, error);

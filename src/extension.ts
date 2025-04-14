@@ -1,55 +1,25 @@
-import { ChildProcess, exec } from 'child_process';
-import path from 'path';
-import { promisify } from 'util';
 import * as vscode from 'vscode';
-import { COMMANDS, ERROR_MESSAGES, WEBVIEW_OPTIONS } from './config';
-import { AnalysisResult, StatusMessage, WebviewMessage } from './types';
-import { getPythonCommand } from './utils/process';
+import { COMMANDS } from './config';
+import { AnalysisService } from './services/analysisService';
+import { WebviewService } from './services/webviewService';
+import { WorkspaceService } from './services/workspaceService';
 import { processManager } from './utils/processManager';
-import {
-	getErrorContent,
-	getLoadingContent,
-	getResultsContent,
-	getSetupGuideContent
-} from './webview/templates';
 
-// Promisify exec for cleaner async/await usage
-const execAsync = promisify(exec);
-
-/**
- * Path to the Python script that performs the repository analysis
- */
-let scriptPath = '';
-
-/**
- * Activates the extension
- * @param context The extension context
- */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-	// Set the path to the Python script
-	scriptPath = context.asAbsolutePath(path.join('src', 'gitingest-script.py'));
+	AnalysisService.setScriptPath(context);
 
-	// Create status bar item
 	const statusBarItem = createStatusBarItem();
-
-	// Register commands
 	const commands = registerCommands();
 
-	// Add all disposables to context subscriptions
 	context.subscriptions.push(...commands, statusBarItem);
 
-	// Show setup guide on first activation
 	await showSetupGuideIfNeeded(context);
 }
 
-/**
- * Creates and configures the status bar item
- * @returns The configured status bar item
- */
 function createStatusBarItem(): vscode.StatusBarItem {
 	const statusBarItem = vscode.window.createStatusBarItem(
 		vscode.StatusBarAlignment.Right,
-		101 // Priority
+		101
 	);
 	statusBarItem.name = "GitIngest";
 	statusBarItem.text = "$(file-zip) GitIngest";
@@ -60,10 +30,6 @@ function createStatusBarItem(): vscode.StatusBarItem {
 	return statusBarItem;
 }
 
-/**
- * Registers all extension commands
- * @returns Array of disposable command registrations
- */
 function registerCommands(): vscode.Disposable[] {
 	return [
 		vscode.commands.registerCommand(COMMANDS.setup, handleSetup),
@@ -72,10 +38,6 @@ function registerCommands(): vscode.Disposable[] {
 	];
 }
 
-/**
- * Shows the setup guide if the extension is being run for the first time
- * @param context The extension context
- */
 async function showSetupGuideIfNeeded(context: vscode.ExtensionContext): Promise<void> {
 	const hasShownSetup = context.globalState.get('gitingestSetup', false);
 	if (!hasShownSetup) {
@@ -84,380 +46,57 @@ async function showSetupGuideIfNeeded(context: vscode.ExtensionContext): Promise
 	}
 }
 
-/**
- * Handles the setup command
- * Shows the setup guide in a webview panel
- */
 async function handleSetup(): Promise<void> {
-	const panel = vscode.window.createWebviewPanel(
-		'gitingestSetup',
-		'GitIngest Setup Guide',
-		vscode.ViewColumn.One,
-		WEBVIEW_OPTIONS
-	);
-
-	panel.webview.html = getSetupGuideContent();
-
-	// Add message handler for the setup panel
-	panel.webview.onDidReceiveMessage(
-		(message: WebviewMessage) => {
-			if (message.command === 'analyze') {
-				handleAnalyze();
-			} else {
-				handleWebviewMessage(message, panel);
-			}
-		},
-		undefined,
-		[]
-	);
+	const panel = WebviewService.createSetupPanel();
+	WebviewService.setupMessageHandler(panel);
 }
 
-/**
- * Handles the analyze command
- * Verifies dependencies and runs the analysis
- * @param panel Optional existing webview panel to use
- */
 async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
-	// Create a new panel if one wasn't provided
 	if (!panel) {
-		panel = vscode.window.createWebviewPanel(
-			'gitingestResults',
-			'GitIngest Analysis',
-			vscode.ViewColumn.One,
-			WEBVIEW_OPTIONS
-		);
+		panel = WebviewService.createAnalysisPanel();
 	}
 
-	// Clean up resources when the panel is closed
 	panel.onDidDispose(() => {
-		processManager.killCurrentProcess().catch(logError);
+		processManager.killCurrentProcess().catch(console.error);
 	});
 
-	// Set up message handling
-	panel.webview.onDidReceiveMessage(
-		(message: WebviewMessage) => handleWebviewMessage(message, panel!),
-		undefined,
-		[]
-	);
+	WebviewService.setupMessageHandler(panel);
 
 	try {
-		// Verify dependencies and run analysis
-		await verifyDependencies(panel);
+		await AnalysisService.verifyDependencies(panel);
+		const workspaceFolder = WorkspaceService.getWorkspaceFolder();
 
-		const workspaceFolder = getWorkspaceFolder();
 		if (!workspaceFolder) {
-			throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
+			throw new Error('No workspace folder is open');
 		}
 
-		await runAnalysisOnPath(panel, workspaceFolder.uri.fsPath, 'Analyzing repository...');
+		await AnalysisService.analyze(panel, workspaceFolder.uri.fsPath, 'Analyzing repository...');
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
-		panel.webview.html = getErrorContent('Analysis Failed', [errorMessage]);
+		const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+		WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
 	}
 }
 
-/**
- * Handles the analyzeFolder command triggered from the context menu
- * @param folderUri The URI of the folder to analyze
- */
 async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
 	if (!folderUri) {
-		vscode.window.showErrorMessage(ERROR_MESSAGES.INVALID_FOLDER);
+		vscode.window.showErrorMessage('Invalid folder selected');
 		return;
 	}
 
-	const folderName = path.basename(folderUri.fsPath);
-	const panel = vscode.window.createWebviewPanel(
-		'gitingestResults',
-		`GitIngest: ${folderName}`,
-		vscode.ViewColumn.One,
-		WEBVIEW_OPTIONS
-	);
+	const folderName = folderUri.fsPath.split('/').pop() || '';
+	const panel = WebviewService.createAnalysisPanel(`GitIngest: ${folderName}`);
 
-	// Clean up resources when the panel is closed
 	panel.onDidDispose(() => {
-		processManager.killCurrentProcess().catch(logError);
+		processManager.killCurrentProcess().catch(console.error);
 	});
 
-	// Set up message handling
-	panel.webview.onDidReceiveMessage(
-		(message: WebviewMessage) => handleWebviewMessage(message, panel),
-		undefined,
-		[]
-	);
+	WebviewService.setupMessageHandler(panel);
 
 	try {
-		// Verify dependencies and run analysis on the specific folder
-		await verifyDependencies(panel);
-		await runAnalysisOnPath(panel, folderUri.fsPath, `Analyzing folder: ${folderName}...`);
+		await AnalysisService.verifyDependencies(panel);
+		await AnalysisService.analyze(panel, folderUri.fsPath, `Analyzing folder: ${folderName}...`);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
-		panel.webview.html = getErrorContent('Analysis Failed', [errorMessage]);
+		const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+		WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
 	}
-}
-
-/**
- * Handles messages from the webview
- * @param message The message from the webview
- * @param panel The webview panel
- */
-async function handleWebviewMessage(
-	message: WebviewMessage,
-	panel: vscode.WebviewPanel,
-): Promise<void> {
-	try {
-		switch (message.command) {
-			case 'analyze':
-				await handleAnalyzeCommand(panel);
-				break;
-			case 'cancel':
-				await handleCancelCommand(panel);
-				break;
-			case 'copy':
-				await handleCopyCommand(message.text);
-				break;
-			case 'showSetup':
-				await handleSetup();
-				break;
-			case 'saveToFile':
-				await handleSaveToFile();
-				break;
-			case 'retry':
-				await handleAnalyzeCommand(panel);
-				break;
-		}
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
-		vscode.window.showErrorMessage(`Command failed: ${errorMessage}`);
-	}
-}
-
-/**
- * Handles the analyze command from the webview
- * @param panel The webview panel
- */
-async function handleAnalyzeCommand(panel: vscode.WebviewPanel): Promise<void> {
-	await processManager.killCurrentProcess();
-	await handleAnalyze(panel);
-}
-
-/**
- * Handles the cancel command from the webview
- * @param panel The webview panel
- */
-async function handleCancelCommand(panel: vscode.WebviewPanel): Promise<void> {
-	await processManager.killCurrentProcess();
-	panel.dispose();
-	vscode.window.showInformationMessage('Analysis cancelled');
-}
-
-/**
- * Handles the copy command from the webview
- * @param text The text to copy
- */
-async function handleCopyCommand(text?: string): Promise<void> {
-	if (text) {
-		await vscode.env.clipboard.writeText(text);
-		vscode.window.showInformationMessage('Analysis output copied to clipboard!');
-	}
-}
-
-/**
- * Handles saving the analysis results to a file
- */
-async function handleSaveToFile(): Promise<void> {
-	const workspaceFolder = getWorkspaceFolder();
-	if (!workspaceFolder) {
-		vscode.window.showErrorMessage(ERROR_MESSAGES.NO_WORKSPACE);
-		return;
-	}
-
-	try {
-		const result = await getOutput(workspaceFolder.uri.fsPath);
-		if (result.type === "success" && result.data) {
-			await saveResultsToFile(workspaceFolder, result.data);
-		}
-	} catch (error) {
-		vscode.window.showErrorMessage('Failed to save analysis to file');
-	}
-}
-
-/**
- * Gets the current workspace folder
- * @returns The workspace folder or undefined if none is open
- */
-function getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
-	return vscode.workspace.workspaceFolders?.[0];
-}
-
-/**
- * Saves the analysis results to a file
- * @param workspaceFolder The workspace folder
- * @param data The analysis data
- */
-async function saveResultsToFile(
-	workspaceFolder: vscode.WorkspaceFolder,
-	data: { summary: string; tree: string; content: string }
-): Promise<void> {
-	const filePath = path.join(workspaceFolder.uri.fsPath, 'digest.txt');
-	const content = formatAnalysisContent(data);
-
-	await vscode.workspace.fs.writeFile(
-		vscode.Uri.file(filePath),
-		Buffer.from(content, 'utf8')
-	);
-
-	vscode.window.showInformationMessage(`Analysis saved to ${filePath}`);
-}
-
-/**
- * Formats the analysis content for saving to a file
- * @param data The analysis data
- * @returns The formatted content
- */
-function formatAnalysisContent(data: { summary: string; tree: string; content: string }): string {
-	return [
-		'# Repository Analysis\n',
-		'## Summary\n',
-		data.summary,
-		'\n## Directory Structure\n',
-		data.tree,
-		'\n## Files Content\n',
-		data.content
-	].join('\n');
-}
-
-/**
- * Verifies that all required dependencies are installed
- * @param panel The webview panel to update with status
- */
-async function verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
-	const statusMessages: StatusMessage[] = [];
-
-	// Check Python installation
-	try {
-		const pythonVersion = await execAsync(`${getPythonCommand()} --version`);
-		statusMessages.push({
-			text: `Python installation verified (${pythonVersion.stdout.trim()}) ✓`,
-			type: 'success'
-		});
-		panel.webview.html = getLoadingContent(statusMessages);
-	} catch {
-		throw new Error(ERROR_MESSAGES.PYTHON_NOT_INSTALLED);
-	}
-
-	// Check GitIngest installation
-	try {
-		await execAsync(`${getPythonCommand()} -m pip show gitingest`);
-		statusMessages.push({
-			text: 'GitIngest package verified ✓',
-			type: 'success'
-		});
-		panel.webview.html = getLoadingContent(statusMessages);
-	} catch {
-		throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
-	}
-}
-
-/**
- * Runs the analysis on a specific path (folder or repository)
- * @param panel The webview panel to update with results
- * @param targetPath The path to analyze
- * @param statusMessage The status message to display during analysis
- */
-async function runAnalysisOnPath(
-	panel: vscode.WebviewPanel,
-	targetPath: string,
-	statusMessage: string
-): Promise<void> {
-	// Show loading status
-	panel.webview.html = getLoadingContent([
-		{ text: 'Python installation verified ✓', type: 'success' },
-		{ text: 'GitIngest package verified ✓', type: 'success' },
-		{ text: statusMessage, type: 'info' }
-	]);
-
-	// Run the analysis
-	const result = await getOutput(targetPath);
-
-	if (result.type === "error") {
-		throw new Error(result.message);
-	}
-
-	if (result.data) {
-		panel.webview.html = getResultsContent(result.data);
-	} else {
-		throw new Error("Analysis result data is undefined");
-	}
-}
-
-/**
- * Gets the output from the Python script
- * @param repoPath The path to the repository
- * @returns The analysis result
- */
-async function getOutput(repoPath: string): Promise<AnalysisResult> {
-	try {
-		const process = exec(`${getPythonCommand()} "${scriptPath}" "${repoPath}"`);
-		processManager.setProcess(process);
-
-		return await collectProcessOutput(process);
-	} catch (error) {
-		logError('exec error:', error);
-		return {
-			type: "error",
-			message: "Execution failed"
-		};
-	}
-}
-
-/**
- * Collects the output from a child process
- * @param process The child process
- * @returns A promise that resolves to the analysis result
- */
-function collectProcessOutput(process: ChildProcess): Promise<AnalysisResult> {
-	return new Promise((resolve, reject) => {
-		let stdout = '';
-		let stderr = '';
-
-		process.stdout?.on('data', (data) => {
-			stdout += data;
-		});
-
-		process.stderr?.on('data', (data) => {
-			stderr += data;
-		});
-
-		process.on('close', (code) => {
-			processManager.clear();
-			if (code === 0 && stdout) {
-				try {
-					const result = JSON.parse(stdout);
-					resolve({
-						type: "success",
-						data: result
-					});
-				} catch (error) {
-					reject(new Error("Failed to parse analysis output"));
-				}
-			} else {
-				reject(new Error(stderr || "Analysis failed"));
-			}
-		});
-
-		process.on('error', (error) => {
-			processManager.clear();
-			reject(error);
-		});
-	});
-}
-
-/**
- * Logs an error to the console
- * @param message The error message
- * @param error The error object
- */
-function logError(message: string, error?: unknown): void {
-	console.error(message, error);
 }

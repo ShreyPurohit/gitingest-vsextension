@@ -54,24 +54,10 @@
 
 <hr style="border: 2px solid black; width: 100%;" />
 
-## 🏗️ Installation & Setup  
-
-### 🔹 Prerequisites  
+## 🏗️ Prerequisites    
 
 1. **Python 3.x** (Ensure it's added to system PATH)  
-2. **VS Code 1.60.0 or higher**  
-3. **A Git Repository**  
-
-### 🔹 Install the Extension  
-
-1. Install from the <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">VS Code Marketplace</a>.  
-2. Install required Python dependencies:  
-
-```bash
-pip install gitingest
-# or
-pip3 install gitingest
-```
+2. **VS Code 1.54.0 or higher**  
 
 <hr style="border: 2px solid black; width: 100%;" />
 
@@ -113,7 +99,7 @@ pip3 install gitingest
 ### **File Content Analysis**  
 
 * Highlights key file content.  
-* Searchable, structured, and copyable.  
+* Structured, and copyable.  
 
 <p align="center">
   <strong>Save or export analysis data effortlessly:</strong><br>
@@ -146,16 +132,10 @@ GitIngest automatically manages:
 #### 🚧 **Python Not Found?**  
 
 ✔ Ensure Python is installed and added to system PATH.  
-✔ Run **`GitIngest: Show Setup Guide`** in the command palette.  
-
-#### 🚧 **GitIngest Not Installed?**  
-
-✔ Run `pip install gitingest` .  
-✔ Verify pip installation with `pip --version` .  
+✔ Run **`GitIngest: Show Setup Guide`** in the command palette.    
 
 #### 🚧 **Analysis Failing?**  
-
-✔ Ensure repository access is configured correctly.  
+ 
 ✔ Verify Python installation.  
 ✔ Check user permissions.  
 
