@@ -1,8 +1,9 @@
 import { exec } from 'child_process';
-import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
 import { ERROR_MESSAGES } from '../config';
+import { OsUtils } from './osUtils';
 
 const execAsync = promisify(exec);
 
@@ -11,6 +12,7 @@ export class PythonHandler {
     private pythonCommand: string = '';
     private venvPath: string = '';
     private venvPython: string = '';
+    private userSitePackages: boolean = false;
 
     private constructor() { }
 
@@ -22,9 +24,7 @@ export class PythonHandler {
     }
 
     private async findPythonCommand(): Promise<string> {
-        const commands = process.platform === 'win32'
-            ? ['python', 'python3']
-            : ['python3', 'python'];
+        const commands = OsUtils.getPythonCommands();
 
         try {
             const checkCommand = async (cmd: string): Promise<string> => {
@@ -42,59 +42,103 @@ export class PythonHandler {
         }
     }
 
-    private async createVirtualEnv(projectPath: string): Promise<void> {
-        this.venvPath = path.join(projectPath, '.venv');
-        this.venvPython = path.join(
-            this.venvPath,
-            process.platform === 'win32' ? 'Scripts' : 'bin',
-            process.platform === 'win32' ? 'python.exe' : 'python'
-        );
-
-        // Check if venv already exists and is valid
-        if (fs.existsSync(this.venvPath) && fs.existsSync(this.venvPython)) {
+    private async checkVenvModule(pythonCmd: string): Promise<boolean> {
+        try {
+            await execAsync(`${pythonCmd} -c "import venv"`);
+            return true;
+        } catch {
+            // Try installing venv using pip in user site-packages
             try {
-                // Verify Python and install gitingest if needed
-                await execAsync(`"${this.venvPython}" --version`);
-                const pipCommand = path.join(
-                    this.venvPath,
-                    process.platform === 'win32' ? 'Scripts' : 'bin',
-                    process.platform === 'win32' ? 'pip.exe' : 'pip'
-                );
-
-                try {
-                    // Check if gitingest is already installed
-                    await execAsync(`"${pipCommand}" show gitingest`);
-                    return; // Environment is valid and gitingest is installed
-                } catch {
-                    // Install gitingest if not present
-                    await execAsync(`"${pipCommand}" install gitingest`);
-                    return;
-                }
+                await execAsync(`${pythonCmd} -m pip install --user virtualenv`);
+                return true;
             } catch {
-                // Environment exists but is broken, delete it
-                await fs.promises.rm(this.venvPath, { recursive: true, force: true });
+                throw new Error(ERROR_MESSAGES.VENV_NOT_INSTALLED);
             }
         }
+    }
 
+    private async installGitIngestUserSite(): Promise<void> {
         try {
             if (!this.pythonCommand) {
                 this.pythonCommand = await this.findPythonCommand();
             }
 
-            // Create new virtual environment
-            await execAsync(`${this.pythonCommand} -m venv "${this.venvPath}"`);
-
-            // Upgrade pip and install gitingest
-            const pipCommand = path.join(
-                this.venvPath,
-                process.platform === 'win32' ? 'Scripts' : 'bin',
-                process.platform === 'win32' ? 'pip.exe' : 'pip'
-            );
-
-            await execAsync(`"${this.venvPython}" -m pip install --upgrade pip`);
-            await execAsync(`"${pipCommand}" install gitingest`);
+            // Install gitingest in user's site-packages
+            await execAsync(`${this.pythonCommand} -m pip install --user gitingest`);
+            this.userSitePackages = true;
         } catch (error) {
-            throw new Error(ERROR_MESSAGES.VENV_CREATION_FAILED);
+            throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
+        }
+    }
+
+    private async tryCreateVenvInPath(targetPath: string): Promise<boolean> {
+        try {
+            if (!this.pythonCommand) {
+                this.pythonCommand = await this.findPythonCommand();
+            }
+
+            await this.checkVenvModule(this.pythonCommand);
+            
+            // Create new virtual environment
+            await execAsync(`${this.pythonCommand} -m venv "${targetPath}"`);
+            return true;
+        } catch (error) {
+            if (error instanceof Error && error.message.includes('permission denied')) {
+                throw new Error(ERROR_MESSAGES.PERMISSION_ERROR);
+            }
+            throw error;
+        }
+    }
+
+    private async createVirtualEnv(projectPath: string): Promise<void> {
+        try {
+            // First try installing in user site-packages
+            await this.installGitIngestUserSite();
+            return;
+        } catch (error) {
+            // If user site-packages installation fails, try venv approach
+            console.log('User site-packages installation failed, trying venv...');
+            
+            // First try in project directory
+            const projectVenvPath = path.join(projectPath, '.venv');
+            
+            // Then try in user's home directory if project directory fails
+            const homeVenvPath = path.join(os.homedir(), '.gitingest-venv');
+
+            let venvCreated = false;
+            let finalVenvPath = '';
+
+            try {
+                await this.tryCreateVenvInPath(projectVenvPath);
+                venvCreated = true;
+                finalVenvPath = projectVenvPath;
+            } catch (error) {
+                if (error instanceof Error && error.message === ERROR_MESSAGES.PERMISSION_ERROR) {
+                    console.log('Failed to create venv in project directory, trying home directory...');
+                    try {
+                        await this.tryCreateVenvInPath(homeVenvPath);
+                        venvCreated = true;
+                        finalVenvPath = homeVenvPath;
+                    } catch (homeError) {
+                        throw new Error(ERROR_MESSAGES.VENV_CREATION_FAILED);
+                    }
+                } else {
+                    throw error;
+                }
+            }
+
+            if (venvCreated) {
+                this.venvPath = finalVenvPath;
+                this.venvPython = OsUtils.getVenvPythonPath(this.venvPath);
+                const pipCommand = OsUtils.getVenvPipPath(this.venvPath);
+
+                try {
+                    await execAsync(`"${this.venvPython}" -m pip install --upgrade pip`);
+                    await execAsync(`"${pipCommand}" install gitingest`);
+                } catch (error) {
+                    throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
+                }
+            }
         }
     }
 
@@ -104,7 +148,7 @@ export class PythonHandler {
             return true;
         } catch (error) {
             console.error('Python verification failed:', error);
-            throw new Error(ERROR_MESSAGES.PYTHON_NOT_INSTALLED);
+            throw error;
         }
     }
 
@@ -114,13 +158,16 @@ export class PythonHandler {
             return true;
         } catch (error) {
             console.error('GitIngest verification failed:', error);
-            throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
+            throw error;
         }
     }
 
     public async executeScript(scriptPath: string, args: string[]): Promise<string> {
         try {
-            const command = `"${this.venvPython}" "${scriptPath}" ${args.map(arg => `"${arg}"`).join(' ')}`;
+            const command = this.userSitePackages
+                ? `${this.pythonCommand} "${scriptPath}" ${args.map(arg => `"${arg}"`).join(' ')}`
+                : `"${this.venvPython}" "${scriptPath}" ${args.map(arg => `"${arg}"`).join(' ')}`;
+
             const { stdout, stderr } = await execAsync(command);
 
             if (stderr) {
