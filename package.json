@@ -37,6 +37,18 @@
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "title": "Gitingest Settings",
+      "type": "object",
+      "properties": {
+        "gitingest.experimentalFeatures": {
+          "type": "boolean",
+          "default": false,
+          "description": "🌟 Enable experimental GitIngest features",
+          "markdownDescription": "Turn on to try out the latest experimental features. Recommended for early adopters."
+        }
+      }
     }
   },
   "scripts": {

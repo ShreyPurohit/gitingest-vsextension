@@ -21,7 +21,7 @@
   <img src="./assets/MainFunctioning.gif" alt="GitIngest VS Code Extension Demo">
 </p>
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## ✨ Features at a Glance  
 
@@ -45,6 +45,7 @@
 ✅ Status Bar shortcut for quick access.  
 ✅ Command Palette support ( `Ctrl/Cmd + Shift + P` ).  
 ✅ Works across Windows, macOS, and Linux.  
+✅ [Optional experimental mode](#-experimental-mode-v003) with built-in execution (no global CLI needed).
 
 ### Analyzing a Specific Folder
 
@@ -52,14 +53,14 @@
 ✅ Select "GitIngest: Analyze This Folder" from the context menu.  
 ✅ View the analysis results specific to that folder.
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🏗️ Prerequisites    
 
 1. **Python 3.x** (Ensure it's added to system PATH)  
 2. **VS Code 1.54.0 or higher**  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🚀 How to Use
 
@@ -81,7 +82,7 @@
 
 <img src="./assets/SetupGuide.gif" alt="Setup Guide" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 📊 Analysis Breakdown  
 
@@ -106,7 +107,7 @@
   <img src="./assets/MultipleOptions.webp" alt="Export Options" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
 </p>
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## ⚙️ Configuration  
 
@@ -116,14 +117,33 @@ GitIngest automatically manages:
 ✔ **Platform-specific command execution**  
 ✔ **Intelligent process management**  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
+
+## 🧪 Experimental Mode (v0.0.3+)
+
+This version introduces optional **experimental features** to improve your experience. You can toggle these under VS Code settings.
+
+### 🔍 How to Enable:
+
+1. Go to `Settings` → `Extensions` → `GitIngest`.
+2. Find **"Enable Experimental Features"** and toggle it on.
+
+### 🧪 What's Included:
+
+* ✨ No need for global GitIngest CLI install — built-in support now.
+* ✨ Early support for private and non-Git codebases.
+* ✨ Lighter and faster execution flow.
+
+> ⚠️ These features are still in testing. You can safely disable them at any time.
+
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🛡️ Security  
 
 ✅ **100% Local Execution** – No external API calls, everything runs on your machine.  
 ✅ **No Data Collection** – Your data stays private.  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## ❓ Troubleshooting  
 
@@ -135,6 +155,7 @@ GitIngest automatically manages:
 ✔ Run **`GitIngest: Show Setup Guide`** in the command palette.    
 
 #### 🚧 **Analysis Failing?**  
+
  
 ✔ Verify Python installation.  
 ✔ Check user permissions.  
@@ -143,20 +164,20 @@ GitIngest automatically manages:
   <img src="./assets/ErrorRecovery.gif" alt="Error Recovery" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
 </p>
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 📜 License  
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🙌 Acknowledgments  
 
 💙 [GitIngest](https://github.com/cyclotruc/gitingest) – Core engine.  
 💙 **VS Code API** – Enabling smooth integration.  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 <p align="center">
   <strong>Made with ❤️ for developers worldwide.</strong>
