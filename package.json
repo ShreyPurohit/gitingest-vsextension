@@ -2,10 +2,11 @@
   "name": "gitingest",
   "displayName": "Gitingest",
   "description": "Turn any repository into a simple text digest of its codebase.",
-  "version": "0.0.3",
+  "version": "0.1.0",
+  "preview": true,
   "publisher": "iamshreydxv",
   "engines": {
-    "vscode": "^1.54.0"
+    "vscode": "^1.63.0"
   },
   "icon": "assets/gitingest-icon.png",
   "categories": [

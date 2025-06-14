@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [0.0.3] – Experimental Preview
+## [0.1.0] – Experimental Preview
 
 > ⚠️ This version includes **experimental support**. Enable it in extension settings if you’d like to try it early.
 
@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [0.0.2] – Stable
+## [0.0.4] – Stable
 
 ### Added
 

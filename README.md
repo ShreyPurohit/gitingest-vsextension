@@ -119,7 +119,7 @@ GitIngest automatically manages:
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## 🧪 Experimental Mode (v0.0.3+)
+## 🧪 Experimental Mode (v0.1.0)
 
 This version introduces optional **experimental features** to improve your experience. You can toggle these under VS Code settings.
 
