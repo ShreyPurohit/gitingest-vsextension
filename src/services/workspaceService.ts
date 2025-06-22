@@ -13,16 +13,18 @@ export class WorkspaceService {
             throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
         }
 
-        const filePath = path.join(workspaceFolder.uri.fsPath, 'digest.txt');
+        const filePath = vscode.Uri.joinPath(workspaceFolder.uri, 'digest.txt');
         const content = this.formatAnalysisContent(data);
 
-        await vscode.workspace.fs.writeFile(
-            vscode.Uri.file(filePath),
-            Buffer.from(content, 'utf8')
-        );
-
-        vscode.window.showInformationMessage(`Analysis saved to ${filePath}`);
+        try {
+            await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, 'utf8'));
+            vscode.window.showInformationMessage(`Analysis saved to ${filePath.fsPath}`);
+        } catch (err) {
+            vscode.window.showErrorMessage(`❌ Failed to write file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            throw err;
+        }
     }
+
 
     private static formatAnalysisContent(data: { summary: string; tree: string; content: string }): string {
         return [
