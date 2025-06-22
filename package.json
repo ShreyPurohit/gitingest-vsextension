@@ -2,8 +2,7 @@
   "name": "gitingest",
   "displayName": "Gitingest",
   "description": "Turn any repository into a simple text digest of its codebase.",
-  "version": "0.1.0",
-  "preview": true,
+  "version": "0.2.0",
   "publisher": "iamshreydxv",
   "engines": {
     "vscode": "^1.63.0"
@@ -38,18 +37,6 @@
           "group": "navigation"
         }
       ]
-    },
-    "configuration": {
-      "title": "Gitingest Settings",
-      "type": "object",
-      "properties": {
-        "gitingest.experimentalFeatures": {
-          "type": "boolean",
-          "default": false,
-          "description": "🌟 Enable experimental GitIngest features",
-          "markdownDescription": "Turn on to try out the latest experimental features. Recommended for early adopters."
-        }
-      }
     }
   },
   "scripts": {
@@ -78,7 +65,8 @@
     "git",
     "ingest",
     "analyze",
-    "repository"
+    "repository",
+    "ai summary"
   ],
   "badges": [
     {

@@ -16,3 +16,4 @@ vsc-extension-quickstart.md
 assets/*.gif
 assets/*.webp
 .venv/*
+.github/*

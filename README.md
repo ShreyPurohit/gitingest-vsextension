@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <strong>Seamlessly analyze your Git repositories inside VS Code!</strong>  
+  <strong>Seamlessly analyze your repositories inside VS Code!</strong>  
   <br>GitIngest provides deep insights, a modern UI, and effortless integration into your workflow.
 </p>
 
@@ -35,9 +35,10 @@
 
 ### 🛠 **Smart & Comprehensive Analysis**  
 
-✅ Scans your entire repository with automatic filtering.  
+✅ Scans your entire codebase—Git or non-Git, public or private.  
+✅ No need for global CLI installation — built-in execution support.  
 ✅ Excludes unnecessary files (build artifacts, binaries, IDE-specific files).  
-✅ Displays repository insights in an easy-to-read format.  
+✅ Displays insights in an easy-to-read format.  
 ✅ Searchable, copyable, and exportable results.  
 
 ### 🔄 **Seamless VS Code Integration**  
@@ -45,15 +46,12 @@
 ✅ Status Bar shortcut for quick access.  
 ✅ Command Palette support ( `Ctrl/Cmd + Shift + P` ).  
 ✅ Works across Windows, macOS, and Linux.  
-✅ [Optional experimental mode](#-experimental-mode-v003) with built-in execution (no global CLI needed).
 
-### Analyzing a Specific Folder
+### 📁 Analyzing a Specific Folder  
 
 ✅ Right-click on any folder in the Explorer view.  
 ✅ Select "GitIngest: Analyze This Folder" from the context menu.  
 ✅ View the analysis results specific to that folder.
-
-<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🏗️ Prerequisites    
 
@@ -119,25 +117,6 @@ GitIngest automatically manages:
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## 🧪 Experimental Mode (v0.1.0)
-
-This version introduces optional **experimental features** to improve your experience. You can toggle these under VS Code settings.
-
-### 🔍 How to Enable:
-
-1. Go to `Settings` → `Extensions` → `GitIngest`.
-2. Find **"Enable Experimental Features"** and toggle it on.
-
-### 🧪 What's Included:
-
-* ✨ No need for global GitIngest CLI install — built-in support now.
-* ✨ Early support for private and non-Git codebases.
-* ✨ Lighter and faster execution flow.
-
-> ⚠️ These features are still in testing. You can safely disable them at any time.
-
-<hr style="border: 2px solid black; width: 100%; " />
-
 ## 🛡️ Security  
 
 ✅ **100% Local Execution** – No external API calls, everything runs on your machine.  
@@ -156,7 +135,6 @@ This version introduces optional **experimental features** to improve your exper
 
 #### 🚧 **Analysis Failing?**  
 
- 
 ✔ Verify Python installation.  
 ✔ Check user permissions.  
 

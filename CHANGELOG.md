@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.2.0] - Promoted experimental features to stable 🎉
+
+* Built-in CLI execution (no global install needed)
+* Support for private and non-Git folders
+* Improved performance and lightweight analysis
+
 ## [0.1.0] – Experimental Preview
 
 > ⚠️ This version includes **experimental support**. Enable it in extension settings if you’d like to try it early.
