@@ -2,10 +2,10 @@
   "name": "gitingest",
   "displayName": "Gitingest",
   "description": "Turn any repository into a simple text digest of its codebase.",
-  "version": "0.0.2",
+  "version": "0.2.0",
   "publisher": "iamshreydxv",
   "engines": {
-    "vscode": "^1.54.0"
+    "vscode": "^1.63.0"
   },
   "icon": "assets/gitingest-icon.png",
   "categories": [
@@ -65,7 +65,8 @@
     "git",
     "ingest",
     "analyze",
-    "repository"
+    "repository",
+    "ai summary"
   ],
   "badges": [
     {

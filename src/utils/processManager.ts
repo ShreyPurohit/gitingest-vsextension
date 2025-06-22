@@ -1,6 +1,6 @@
 import { ChildProcess } from 'child_process';
 import { ERROR_MESSAGES } from '../config';
-import { killProcess } from './process';
+import { OsUtils } from './osUtils';
 
 class ProcessManager {
     private currentProcess: ChildProcess | null = null;
@@ -19,7 +19,7 @@ class ProcessManager {
         }
 
         try {
-            killProcess(this.currentProcess);
+            await OsUtils.killProcess(this.currentProcess.pid);
             this.currentProcess = null;
         } catch (error) {
             console.error(ERROR_MESSAGES.PROCESS_KILL_FAILED, error);

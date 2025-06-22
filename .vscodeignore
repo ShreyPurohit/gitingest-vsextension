@@ -15,3 +15,5 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 assets/*.gif
 assets/*.webp
+.venv/*
+.github/*

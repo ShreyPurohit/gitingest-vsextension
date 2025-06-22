@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <strong>Seamlessly analyze your Git repositories inside VS Code!</strong>  
+  <strong>Seamlessly analyze your repositories inside VS Code!</strong>  
   <br>GitIngest provides deep insights, a modern UI, and effortless integration into your workflow.
 </p>
 
@@ -21,7 +21,7 @@
   <img src="./assets/MainFunctioning.gif" alt="GitIngest VS Code Extension Demo">
 </p>
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## ✨ Features at a Glance  
 
@@ -35,9 +35,10 @@
 
 ### 🛠 **Smart & Comprehensive Analysis**  
 
-✅ Scans your entire repository with automatic filtering.  
+✅ Scans your entire codebase—Git or non-Git, public or private.  
+✅ No need for global CLI installation — built-in execution support.  
 ✅ Excludes unnecessary files (build artifacts, binaries, IDE-specific files).  
-✅ Displays repository insights in an easy-to-read format.  
+✅ Displays insights in an easy-to-read format.  
 ✅ Searchable, copyable, and exportable results.  
 
 ### 🔄 **Seamless VS Code Integration**  
@@ -46,34 +47,18 @@
 ✅ Command Palette support ( `Ctrl/Cmd + Shift + P` ).  
 ✅ Works across Windows, macOS, and Linux.  
 
-### Analyzing a Specific Folder
+### 📁 Analyzing a Specific Folder  
 
 ✅ Right-click on any folder in the Explorer view.  
 ✅ Select "GitIngest: Analyze This Folder" from the context menu.  
 ✅ View the analysis results specific to that folder.
 
-<hr style="border: 2px solid black; width: 100%;" />
-
-## 🏗️ Installation & Setup  
-
-### 🔹 Prerequisites  
+## 🏗️ Prerequisites    
 
 1. **Python 3.x** (Ensure it's added to system PATH)  
-2. **VS Code 1.60.0 or higher**  
-3. **A Git Repository**  
+2. **VS Code 1.54.0 or higher**  
 
-### 🔹 Install the Extension  
-
-1. Install from the <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">VS Code Marketplace</a>.  
-2. Install required Python dependencies:  
-
-```bash
-pip install gitingest
-# or
-pip3 install gitingest
-```
-
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🚀 How to Use
 
@@ -95,7 +80,7 @@ pip3 install gitingest
 
 <img src="./assets/SetupGuide.gif" alt="Setup Guide" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 📊 Analysis Breakdown  
 
@@ -113,14 +98,14 @@ pip3 install gitingest
 ### **File Content Analysis**  
 
 * Highlights key file content.  
-* Searchable, structured, and copyable.  
+* Structured, and copyable.  
 
 <p align="center">
   <strong>Save or export analysis data effortlessly:</strong><br>
   <img src="./assets/MultipleOptions.webp" alt="Export Options" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
 </p>
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## ⚙️ Configuration  
 
@@ -130,14 +115,14 @@ GitIngest automatically manages:
 ✔ **Platform-specific command execution**  
 ✔ **Intelligent process management**  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🛡️ Security  
 
 ✅ **100% Local Execution** – No external API calls, everything runs on your machine.  
 ✅ **No Data Collection** – Your data stays private.  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## ❓ Troubleshooting  
 
@@ -146,16 +131,10 @@ GitIngest automatically manages:
 #### 🚧 **Python Not Found?**  
 
 ✔ Ensure Python is installed and added to system PATH.  
-✔ Run **`GitIngest: Show Setup Guide`** in the command palette.  
-
-#### 🚧 **GitIngest Not Installed?**  
-
-✔ Run `pip install gitingest` .  
-✔ Verify pip installation with `pip --version` .  
+✔ Run **`GitIngest: Show Setup Guide`** in the command palette.    
 
 #### 🚧 **Analysis Failing?**  
 
-✔ Ensure repository access is configured correctly.  
 ✔ Verify Python installation.  
 ✔ Check user permissions.  
 
@@ -163,20 +142,20 @@ GitIngest automatically manages:
   <img src="./assets/ErrorRecovery.gif" alt="Error Recovery" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
 </p>
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 📜 License  
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 ## 🙌 Acknowledgments  
 
 💙 [GitIngest](https://github.com/cyclotruc/gitingest) – Core engine.  
 💙 **VS Code API** – Enabling smooth integration.  
 
-<hr style="border: 2px solid black; width: 100%;" />
+<hr style="border: 2px solid black; width: 100%; " />
 
 <p align="center">
   <strong>Made with ❤️ for developers worldwide.</strong>
