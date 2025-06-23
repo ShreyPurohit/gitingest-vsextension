@@ -1,0 +1,27 @@
+name: Release & Publish (main & tags)
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+
+jobs:
+  build:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish Extension
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - name: Publish to marketplaces
+        uses: HaaLeo/publish-vscode-extension@v2
+        with:
+          vsce_token: ${{ secrets.VSCE_PAT }}
+          ovsx_token: ${{ secrets.OVSX_PAT }}
+          skipDuplicate: true
