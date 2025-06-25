@@ -1,3 +1,2 @@
-# CODEOWNERS file for GitHub repository folder-structure-pro-vscode
-
-*       @ShreyPurohit
+# CODEOWNERS file for GitHub repository gitingest-vsextension
+*      @cyclotruc @ShreyPurohit
