@@ -54,7 +54,7 @@ jobs:
         run: |
           echo "🧪 Testing compatibility with ${{ matrix.variant }}"
           # Verify the extension was built
-          if [ -f "out/extension.js" ]; then
+          if [ -f "dist/extension.js" ]; then
             echo "✅ Extension build found"
           else
             echo "❌ Extension build not found"
