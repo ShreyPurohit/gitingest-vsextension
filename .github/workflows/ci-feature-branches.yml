@@ -1,4 +1,4 @@
-name: Feature Branch CI (Lint & Build Only)
+name: Feature Branch CI (Lint & Package Only)
 
 on:
   push:
@@ -15,9 +15,9 @@ jobs:
       node-version: '20'
 
   build:
-    name: "Quick Build Check"
+    name: "Quick Package Check"
     needs: lint
     uses: ./.github/workflows/build.yml
     with:
       node-version: '20'
-      build-command: 'npm run build'
+      build-command: 'npm run package'

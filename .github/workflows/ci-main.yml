@@ -16,12 +16,12 @@ jobs:
 
   # Step 2: Build (runs on all branches, depends on lint)
   build:
-    name: "Step 2: Build & Compile"
+    name: "Step 2: Build & Package"
     needs: lint
     uses: ./.github/workflows/build.yml
     with:
       node-version: '20'
-      build-command: 'npm run build'
+      build-command: 'npm run package'
 
   # Step 3: Compatibility Testing (runs on all branches, depends on build)
   compatibility:

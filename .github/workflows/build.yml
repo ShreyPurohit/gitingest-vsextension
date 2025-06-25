@@ -17,7 +17,7 @@ on:
         description: 'Build command to run'
         required: false
         type: string
-        default: 'npm run build'
+        default: 'npm run package'
     outputs:
       build-success:
         description: 'Whether the build was successful'
@@ -25,7 +25,7 @@ on:
 
 jobs:
   build:
-    name: Build & Compile
+    name: Build & Package
     runs-on: ubuntu-latest
     outputs:
       success: ${{ steps.build.outcome == 'success' }}

@@ -53,8 +53,13 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: |
           echo "🧪 Testing compatibility with ${{ matrix.variant }}"
-          # Add your specific compatibility tests here
-          # For now, we'll simulate the test
+          # Verify the extension was built
+          if [ -f "out/extension.js" ]; then
+            echo "✅ Extension build found"
+          else
+            echo "❌ Extension build not found"
+            exit 1
+          fi
           echo "✅ Compatibility test passed for ${{ matrix.variant }}"
           
       - name: Validate extension package
@@ -62,5 +67,11 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: |
           echo "📦 Validating VS Code extension package"
-          # Add package validation logic here
+          # Check if package.json has required VS Code extension fields
+          if grep -q "vscode:prepublish" package.json; then
+            echo "✅ VS Code prepublish script found"
+          else
+            echo "❌ VS Code prepublish script missing"
+            exit 1
+          fi
           echo "✅ Package validation successful"
