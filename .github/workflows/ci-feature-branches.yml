@@ -1,0 +1,23 @@
+name: Feature Branch CI (Lint & Build Only)
+
+on:
+  push:
+    branches-ignore: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # Quick validation for feature branches
+  lint:
+    name: "Quick Lint Check"
+    uses: ./.github/workflows/lint.yml
+    with:
+      node-version: '20'
+
+  build:
+    name: "Quick Build Check"
+    needs: lint
+    uses: ./.github/workflows/build.yml
+    with:
+      node-version: '20'
+      build-command: 'npm run build'

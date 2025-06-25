@@ -1,4 +1,4 @@
-name: CI - Lint & Build (all branches)
+name: Complete CI/CD Pipeline
 
 on:
   push:
@@ -7,5 +7,40 @@ on:
     branches: ["**"]
 
 jobs:
+  # Step 1: Lint (runs on all branches)
+  lint:
+    name: "Step 1: Code Quality & Linting"
+    uses: ./.github/workflows/lint.yml
+    with:
+      node-version: '20'
+
+  # Step 2: Build (runs on all branches, depends on lint)
   build:
-    uses: ./.github/workflows/ci.yml
+    name: "Step 2: Build & Compile"
+    needs: lint
+    uses: ./.github/workflows/build.yml
+    with:
+      node-version: '20'
+      build-command: 'npm run build'
+
+  # Step 3: Compatibility Testing (runs on all branches, depends on build)
+  compatibility:
+    name: "Step 3: Compatibility Testing"
+    needs: build
+    uses: ./.github/workflows/compatibility.yml
+    with:
+      node-version: '20'
+      test-variants: '["code", "code-oss"]'
+
+  # Step 4: Release (only runs on main branch and tags, depends on compatibility)
+  release:
+    name: "Step 4: Release & Publish"
+    needs: compatibility
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/release.yml
+    with:
+      node-version: '20'
+      skip-duplicate: true
+    secrets:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}

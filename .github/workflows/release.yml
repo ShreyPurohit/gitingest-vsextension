@@ -1,27 +1,80 @@
-name: Release & Publish (main & tags)
+name: Release & Publish
 
 on:
-  push:
-    branches: ["main"]
-    tags: ["v*"]
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '20'
+      working-directory:
+        description: 'Working directory for the project'
+        required: false
+        type: string
+        default: '.'
+      skip-duplicate:
+        description: 'Skip duplicate releases'
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      VSCE_PAT:
+        description: 'VS Code Extension Personal Access Token'
+        required: true
+      OVSX_PAT:
+        description: 'Open VSX Personal Access Token'
+        required: true
 
 jobs:
-  build:
-    uses: ./.github/workflows/ci.yml
-
-  publish:
-    name: Publish Extension
-    needs: build
+  release:
+    name: Release & Publish Extension
     runs-on: ubuntu-latest
+    environment: production
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - run: npm ci
-      - name: Publish to marketplaces
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: npm ci
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: ${{ inputs.working-directory }}/dist
+          
+      - name: Prepare release package
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "📦 Preparing release package"
+          # Ensure all necessary files are in place
+          ls -la dist/
+          
+      - name: Publish to VS Code Marketplace & Open VSX
         uses: HaaLeo/publish-vscode-extension@v2
         with:
           vsce_token: ${{ secrets.VSCE_PAT }}
           ovsx_token: ${{ secrets.OVSX_PAT }}
-          skipDuplicate: true
+          skipDuplicate: ${{ inputs.skip-duplicate }}
+          packagePath: ${{ inputs.working-directory }}
+          
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false

@@ -1,0 +1,59 @@
+name: Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '20'
+      working-directory:
+        description: 'Working directory for the project'
+        required: false
+        type: string
+        default: '.'
+      build-command:
+        description: 'Build command to run'
+        required: false
+        type: string
+        default: 'npm run build'
+    outputs:
+      build-success:
+        description: 'Whether the build was successful'
+        value: ${{ jobs.build.outputs.success }}
+
+jobs:
+  build:
+    name: Build & Compile
+    runs-on: ubuntu-latest
+    outputs:
+      success: ${{ steps.build.outcome == 'success' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: npm ci
+        
+      - name: Build project
+        id: build
+        working-directory: ${{ inputs.working-directory }}
+        run: ${{ inputs.build-command }}
+        
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: ${{ inputs.working-directory }}/dist
+          retention-days: 7
