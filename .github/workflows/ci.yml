@@ -1,4 +1,4 @@
-name: Reusable CI – Lint & Build
+name: Reusable CI - Lint & Build
 
 on:
   workflow_call:

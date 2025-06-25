@@ -1,4 +1,4 @@
-name: Compatibility Check – VS Code & Code OSS
+name: Compatibility Check - VS Code & Code OSS
 
 on:
   push:
@@ -7,29 +7,17 @@ on:
     branches: ['main']
 
 jobs:
+  build:
+    uses: ./.github/workflows/ci.yml
+
   test-compatibility:
     name: Test on ${{ matrix.variant }}
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         variant: [code, code-oss]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint & Build (reusing existing CI)
-        uses: ./.github/workflows/ci.yml
-
-      - name: Compatibility target info
-        run: |
-          echo "✅ This build confirms compatibility with ${{ matrix.variant }}."
+      - name: Print compatibility info
+        run: echo "✅ This confirms compatibility with ${{ matrix.variant }}"

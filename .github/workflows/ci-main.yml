@@ -1,4 +1,4 @@
-name: CI – Lint & Build (all branches)
+name: CI - Lint & Build (all branches)
 
 on:
   push:
