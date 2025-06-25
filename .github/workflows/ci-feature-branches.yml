@@ -1,4 +1,4 @@
-name: Feature Branch CI (Lint & Package Only)
+name: Feature Branch CI (Quick Validation)
 
 on:
   push:
@@ -7,17 +7,26 @@ on:
     branches: ["main"]
 
 jobs:
-  # Quick validation for feature branches
+  # Quick validation for feature branches - no publishing
   lint:
-    name: "Quick Lint Check"
+    name: "Quick Lint & Type Check"
     uses: ./.github/workflows/lint.yml
     with:
       node-version: '20'
 
   build:
-    name: "Quick Package Check"
+    name: "Quick Build & Package Check"
     needs: lint
     uses: ./.github/workflows/build.yml
     with:
       node-version: '20'
       build-command: 'npm run package'
+      
+  # Optional: Quick compatibility check on feature branches
+  compatibility:
+    name: "Quick Compatibility Check"
+    needs: build
+    uses: ./.github/workflows/compatibility.yml
+    with:
+      node-version: '20'
+      test-variants: '["stable"]'  # Only test stable version for speed

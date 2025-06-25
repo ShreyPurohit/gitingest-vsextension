@@ -25,7 +25,7 @@ on:
 
 jobs:
   build:
-    name: Build & Package
+    name: Build & Package Extension
     runs-on: ubuntu-latest
     outputs:
       success: ${{ steps.build.outcome == 'success' }}
@@ -45,11 +45,23 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: npm ci
         
-      - name: Build project
+      - name: Build extension
         id: build
         working-directory: ${{ inputs.working-directory }}
         run: ${{ inputs.build-command }}
         
+      - name: Verify build output
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          echo "🔍 Verifying build output..."
+          if [ -f "dist/extension.js" ]; then
+            echo "✅ Extension compiled successfully"
+            ls -la dist/
+          else
+            echo "❌ Extension build failed - dist/extension.js not found"
+            exit 1
+          fi
+          
       - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4

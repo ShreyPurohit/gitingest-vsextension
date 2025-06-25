@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: true
+      dry-run:
+        description: 'Perform a dry run without publishing'
+        required: false
+        type: boolean
+        default: false
     secrets:
       VSCE_PAT:
         description: 'VS Code Extension Personal Access Token'
@@ -53,23 +58,52 @@ jobs:
           name: build-artifacts-${{ github.sha }}
           path: ${{ inputs.working-directory }}/dist
           
+      - name: Install VSCE (VS Code Extension Manager)
+        run: npm install -g @vscode/vsce
+        
       - name: Prepare release package
         working-directory: ${{ inputs.working-directory }}
         run: |
           echo "📦 Preparing release package"
-          # Ensure all necessary files are in place
+          
+          # Verify build artifacts exist
+          if [ ! -f "dist/extension.js" ]; then
+            echo "❌ Extension build not found"
+            exit 1
+          fi
+          
+          # List contents for debugging
+          echo "📁 Build contents:"
           ls -la dist/
           
-      - name: Publish to VS Code Marketplace & Open VSX
-        uses: HaaLeo/publish-vscode-extension@v2
-        with:
-          vsce_token: ${{ secrets.VSCE_PAT }}
-          ovsx_token: ${{ secrets.OVSX_PAT }}
-          skipDuplicate: ${{ inputs.skip-duplicate }}
-          packagePath: ${{ inputs.working-directory }}
+          # Validate package before publishing
+          vsce package --no-dependencies
+          echo "✅ Extension package created successfully"
+          
+      - name: Publish to VS Code Marketplace
+        if: ${{ !inputs.dry-run }}
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          echo "🚀 Publishing to VS Code Marketplace"
+          if [ "${{ inputs.skip-duplicate }}" = "true" ]; then
+            vsce publish --no-dependencies --skip-duplicate
+          else
+            vsce publish --no-dependencies
+          fi
+          
+      - name: Publish to Open VSX Registry
+        if: ${{ !inputs.dry-run }}
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          echo "🚀 Publishing to Open VSX Registry"
+          npx ovsx publish *.vsix -p $OVSX_PAT
           
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && !inputs.dry-run
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,3 +112,22 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
+          
+      - name: Upload Extension Package to Release
+        if: startsWith(github.ref, 'refs/tags/') && !inputs.dry-run
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ inputs.working-directory }}/*.vsix
+          asset_name: extension.vsix
+          asset_content_type: application/zip
+          
+      - name: Dry Run Summary
+        if: inputs.dry-run
+        run: |
+          echo "🔍 DRY RUN COMPLETED"
+          echo "✅ Extension would be published successfully"
+          echo "📦 Package validation passed"
+          echo "🚀 Ready for production release"

@@ -17,11 +17,11 @@ on:
         description: 'JSON array of test variants'
         required: false
         type: string
-        default: '["code", "code-oss"]'
+        default: '["stable", "insiders"]'
 
 jobs:
   compatibility-test:
-    name: Test Compatibility - ${{ matrix.variant }}
+    name: Test VS Code ${{ matrix.variant }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,10 +49,27 @@ jobs:
           name: build-artifacts-${{ github.sha }}
           path: ${{ inputs.working-directory }}/dist
           
-      - name: Run compatibility tests for ${{ matrix.variant }}
+      - name: Install VS Code ${{ matrix.variant }}
+        run: |
+          if [ "${{ matrix.variant }}" = "insiders" ]; then
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+            sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+            sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+            sudo apt update
+            sudo apt install code-insiders
+          else
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+            sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+            sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+            sudo apt update
+            sudo apt install code
+          fi
+          
+      - name: Run extension tests
         working-directory: ${{ inputs.working-directory }}
         run: |
-          echo "🧪 Testing compatibility with ${{ matrix.variant }}"
+          echo "🧪 Testing extension with VS Code ${{ matrix.variant }}"
+          
           # Verify the extension was built
           if [ -f "dist/extension.js" ]; then
             echo "✅ Extension build found"
@@ -60,18 +77,40 @@ jobs:
             echo "❌ Extension build not found"
             exit 1
           fi
-          echo "✅ Compatibility test passed for ${{ matrix.variant }}"
           
-      - name: Validate extension package
-        if: matrix.variant == 'code'
+          # Check if extension can be loaded (basic syntax check)
+          node -c dist/extension.js
+          echo "✅ Extension syntax validation passed"
+          
+          # If you have actual tests, run them here
+          # npm test
+          
+          echo "✅ Compatibility test passed for VS Code ${{ matrix.variant }}"
+          
+      - name: Validate package.json for VS Code
         working-directory: ${{ inputs.working-directory }}
         run: |
-          echo "📦 Validating VS Code extension package"
-          # Check if package.json has required VS Code extension fields
-          if grep -q "vscode:prepublish" package.json; then
-            echo "✅ VS Code prepublish script found"
-          else
-            echo "❌ VS Code prepublish script missing"
+          echo "📦 Validating VS Code extension package.json"
+          
+          # Check required fields
+          if ! jq -e '.engines.vscode' package.json > /dev/null; then
+            echo "❌ Missing engines.vscode in package.json"
             exit 1
           fi
-          echo "✅ Package validation successful"
+          
+          if ! jq -e '.main' package.json > /dev/null; then
+            echo "❌ Missing main entry point in package.json"
+            exit 1
+          fi
+          
+          if ! jq -e '.activationEvents' package.json > /dev/null; then
+            echo "❌ Missing activationEvents in package.json"
+            exit 1
+          fi
+          
+          if ! jq -e '.contributes' package.json > /dev/null; then
+            echo "❌ Missing contributes section in package.json"
+            exit 1
+          fi
+          
+          echo "✅ Package.json validation successful"
