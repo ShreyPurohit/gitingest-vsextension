@@ -16,3 +16,10 @@ We will investigate and fix any valid issues as quickly as possible. Once resolv
 We kindly ask that you:
 * Give us **reasonable time** to fix the issue
 * Avoid disclosing the issue publicly before a patch is available
+
+---
+
+## 🔒 Telemetry
+
+This extension does **not** collect any telemetry or usage data. All analysis is run locally on your machine.  
+If outbound network activity is added in the future, it will be fully documented and opt-in.
