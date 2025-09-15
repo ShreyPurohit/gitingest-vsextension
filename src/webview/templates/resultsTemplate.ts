@@ -5,42 +5,46 @@ import { getBaseStyles } from '../styles/base';
 import { createHtmlDocument, escapeHtml } from '../utils/html';
 import { icons } from '../utils/icons';
 
-export function getResultsContent(data: { summary: string; tree: string; content: string }): string {
-  const content = `
+export function getResultsContent(data: {
+    summary: string;
+    tree: string;
+    content: string;
+}): string {
+    const content = `
     <div class="shadow-wrapper">
       <div class="content-wrapper">
         <div class="grid">
           <div>
             ${Section({
-    title: 'Summary',
-    content: escapeHtml(data.summary),
-    copyFunction: 'copySummary()'
-  })}
+                title: 'Summary',
+                content: escapeHtml(data.summary),
+                copyFunction: 'copySummary()',
+            })}
             <div class="button-group">
               ${Button({
-    onClick: 'copyAll()',
-    icon: icons.copy,
-    children: 'Copy All'
-  })}
+                  onClick: 'copyAll()',
+                  icon: icons.copy,
+                  children: 'Copy All',
+              })}
               ${Button({
-    onClick: 'saveToFile()',
-    icon: icons.save,
-    children: 'Save to File'
-  })}
+                  onClick: 'saveToFile()',
+                  icon: icons.save,
+                  children: 'Save to File',
+              })}
             </div>
           </div>
           ${Section({
-    title: 'Directory Structure',
-    content: escapeHtml(data.tree),
-    copyFunction: 'copyTree()'
-  })}
+              title: 'Directory Structure',
+              content: escapeHtml(data.tree),
+              copyFunction: 'copyTree()',
+          })}
         </div>
 
         ${Section({
-    title: 'Files Content',
-    content: escapeHtml(data.content),
-    copyFunction: 'copyContent()'
-  })}
+            title: 'Files Content',
+            content: escapeHtml(data.content),
+            copyFunction: 'copyContent()',
+        })}
       </div>
     </div>
     <script>
@@ -69,10 +73,13 @@ export function getResultsContent(data: { summary: string; tree: string; content
       }
 
       function saveToFile() {
-        vscode.postMessage({ command: 'saveToFile' });
+        const summary = document.querySelectorAll('.scrollable-content pre')[0].innerText;
+        const tree = document.querySelectorAll('.scrollable-content pre')[1].innerText;
+        const content = document.querySelectorAll('.scrollable-content pre')[2].innerText;
+        vscode.postMessage({ command: 'saveToFile', data: { summary, tree, content } });
       }
     </script>
   `;
 
-  return createHtmlDocument(content, getBaseStyles(THEME));
+    return createHtmlDocument(content, getBaseStyles(THEME));
 }

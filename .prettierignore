@@ -1,0 +1,11 @@
+node_modules
+dist
+out
+coverage
+*.log
+.vscode-test
+.DS_Store
+package-lock.json
+package.json
+tsconfig.json
+.vscode/*

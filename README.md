@@ -1,4 +1,4 @@
-<h1 align="center">🚀 GitIngest VS Code Extension</h1>  
+<h1 align="center">🚀 GitIngest VS Code Extension</h1>
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">
@@ -23,82 +23,82 @@
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## ✨ Features at a Glance  
+## ✨ Features at a Glance
 
-### 🎯 **Modern & Interactive UI**  
+### 🎯 **Modern & Interactive UI**
 
 ✅ Beautiful Webview interface with a sleek design.  
 ✅ Interactive three-panel layout (Summary, Directory, File Content).  
 ✅ One-click copy for all analysis sections.  
 ✅ Real-time progress indicators.  
-✅ Fully responsive design, adapts to different screen sizes.  
+✅ Fully responsive design, adapts to different screen sizes.
 
-### 🛠 **Smart & Comprehensive Analysis**  
+### 🛠 **Smart & Comprehensive Analysis**
 
 ✅ Scans your entire codebase—Git or non-Git, public or private.  
 ✅ No need for global CLI installation — built-in execution support.  
 ✅ Excludes unnecessary files (build artifacts, binaries, IDE-specific files).  
 ✅ Displays insights in an easy-to-read format.  
-✅ Searchable, copyable, and exportable results.  
+✅ Searchable, copyable, and exportable results.
 
-### 🔄 **Seamless VS Code Integration**  
+### 🔄 **Seamless VS Code Integration**
 
 ✅ Status Bar shortcut for quick access.  
 ✅ Command Palette support ( `Ctrl/Cmd + Shift + P` ).  
-✅ Works across Windows, macOS, and Linux.  
+✅ Works across Windows, macOS, and Linux.
 
-### 📁 Analyzing a Specific Folder  
+### 📁 Analyzing a Specific Folder
 
 ✅ Right-click on any folder in the Explorer view.  
 ✅ Select "GitIngest: Analyze This Folder" from the context menu.  
 ✅ View the analysis results specific to that folder.
 
-## 🏗️ Prerequisites    
+## 🏗️ Prerequisites
 
-1. **Python 3.x** (Ensure it's added to system PATH)  
-2. **VS Code 1.54.0 or higher**  
+1. **Python 3.x** (Ensure it's added to system PATH)
+2. **VS Code 1.54.0 or higher**
 
 <hr style="border: 2px solid black; width: 100%; " />
 
 ## 🚀 How to Use
 
-### Open a local codebase 
+### Open a local codebase
 
-### Start GitIngest  
+### Start GitIngest
 
 1. **Via Explorer:** Right click on any specific folder and choose `Gitingest: Analyze this folder`
 
 <img src="./assets/Context-Menu.gif" alt="Context Click Activation" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); "><br>
 
-2. **Via Status Bar:** Click the GitIngest icon for one-click access. 
+2. **Via Status Bar:** Click the GitIngest icon for one-click access.
 
 <img src="./assets/SingleClickOn.gif" alt="Single Click Activation" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); "><br>
 
-3. **Via Command Palette (`Ctrl/Cmd + Shift + P`)**  
-   + Run **`GitIngest: Analyze Repository`** to start analysis.  
-   + Run **`GitIngest: Show Setup Guide`** for setup help.  
+3. **Via Command Palette (`Ctrl/Cmd + Shift + P`)**
+    - Run **`GitIngest: Analyze Repository`** to start analysis.
+    - Run **`GitIngest: Show Setup Guide`** for setup help.
 
-<img src="./assets/SetupGuide.gif" alt="Setup Guide" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">  
+<img src="./assets/SetupGuide.gif" alt="Setup Guide" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## 📊 Analysis Breakdown  
+## 📊 Analysis Breakdown
 
-### **Summary Panel**  
+### **Summary Panel**
 
-* High-level repository overview.  
-* Key insights and metrics.  
-* Easily copyable format.  
+- High-level repository overview.
+- Key insights and metrics.
+- Easily copyable format.
 
-### **Directory Structure**  
+### **Directory Structure**
 
-* Tree view of your project structure.  
-* Filters out unnecessary files.  
+- Tree view of your project structure.
+- Filters out unnecessary files.
 
-### **File Content Analysis**  
+### **File Content Analysis**
 
-* Highlights key file content.  
-* Structured, and copyable.  
+- Highlights key file content.
+- Structured, and copyable.
 
 <p align="center">
   <strong>Save or export analysis data effortlessly:</strong><br>
@@ -107,36 +107,36 @@
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## ⚙️ Configuration  
+## ⚙️ Configuration
 
 GitIngest automatically manages:  
 ✔ **Python environment detection**  
 ✔ **GitIngest package verification**  
 ✔ **Platform-specific command execution**  
-✔ **Intelligent process management**  
+✔ **Intelligent process management**
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## 🛡️ Security  
+## 🛡️ Security
 
 ✅ **100% Local Execution** – No external API calls, everything runs on your machine.  
-✅ **No Data Collection** – Your data stays private.  
+✅ **No Data Collection** – Your data stays private.
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## ❓ Troubleshooting  
+## ❓ Troubleshooting
 
-### **Common Issues & Fixes**  
+### **Common Issues & Fixes**
 
-#### 🚧 **Python Not Found?**  
+#### 🚧 **Python Not Found?**
 
 ✔ Ensure Python is installed and added to system PATH.  
-✔ Run **`GitIngest: Show Setup Guide`** in the command palette.    
+✔ Run **`GitIngest: Show Setup Guide`** in the command palette.
 
-#### 🚧 **Analysis Failing?**  
+#### 🚧 **Analysis Failing?**
 
 ✔ Verify Python installation.  
-✔ Check user permissions.  
+✔ Check user permissions.
 
 <p align="center">
   <img src="./assets/ErrorRecovery.gif" alt="Error Recovery" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
@@ -144,16 +144,16 @@ GitIngest automatically manages:
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## 📜 License  
+## 📜 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.  
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
 <hr style="border: 2px solid black; width: 100%; " />
 
-## 🙌 Acknowledgments  
+## 🙌 Acknowledgments
 
 💙 [GitIngest](https://github.com/cyclotruc/gitingest) – Core engine.  
-💙 **VS Code API** – Enabling smooth integration.  
+💙 **VS Code API** – Enabling smooth integration.
 
 <hr style="border: 2px solid black; width: 100%; " />
 

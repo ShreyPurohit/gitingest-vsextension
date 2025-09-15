@@ -8,7 +8,7 @@ import { WorkspaceService } from './workspaceService';
 
 export async function handleWebviewMessage(
     message: WebviewMessage,
-    panel: vscode.WebviewPanel
+    panel: vscode.WebviewPanel,
 ): Promise<void> {
     try {
         switch (message.command) {
@@ -25,7 +25,7 @@ export async function handleWebviewMessage(
                 await vscode.commands.executeCommand('vscode-gitingest.setup');
                 break;
             case 'saveToFile':
-                await handleSaveToFile();
+                await handleSaveToFile(message);
                 break;
             case 'retry':
                 await handleAnalyzeCommand(panel);
@@ -66,17 +66,17 @@ async function handleCopyCommand(text?: string): Promise<void> {
     }
 }
 
-async function handleSaveToFile(): Promise<void> {
+async function handleSaveToFile(message: WebviewMessage): Promise<void> {
     const workspaceFolder = WorkspaceService.getWorkspaceFolder();
     if (!workspaceFolder) {
         throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
     }
 
     try {
-        const result = await AnalysisService.getOutput(workspaceFolder.uri.fsPath);
-        if (result.type === "success" && result.data) {
-            await WorkspaceService.saveResultsToFile(result.data);
+        if (!message.data) {
+            throw new Error('No data provided to save');
         }
+        await WorkspaceService.saveResultsToFile(message.data);
     } catch (error) {
         throw new Error('Failed to save analysis to file');
     }

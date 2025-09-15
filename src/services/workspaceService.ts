@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { ERROR_MESSAGES } from '../config';
 
@@ -7,26 +6,52 @@ export class WorkspaceService {
         return vscode.workspace.workspaceFolders?.[0];
     }
 
-    public static async saveResultsToFile(data: { summary: string; tree: string; content: string }): Promise<void> {
+    public static async saveResultsToFile(data: {
+        summary: string;
+        tree: string;
+        content: string;
+    }): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder();
         if (!workspaceFolder) {
             throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
         }
 
-        const filePath = vscode.Uri.joinPath(workspaceFolder.uri, 'digest.txt');
         const content = this.formatAnalysisContent(data);
+        const targetUri = await this.getUniqueRootFileUri(workspaceFolder.uri, 'digest', '.txt');
 
         try {
-            await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, 'utf8'));
-            vscode.window.showInformationMessage(`Analysis saved to ${filePath.fsPath}`);
+            await vscode.workspace.fs.writeFile(targetUri, Buffer.from(content, 'utf8'));
+            vscode.window.showInformationMessage(`Analysis saved to ${targetUri.fsPath}`);
         } catch (err) {
-            vscode.window.showErrorMessage(`❌ Failed to write file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            const msg = err instanceof Error ? err.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to write file: ${msg}`);
             throw err;
         }
     }
 
+    private static async getUniqueRootFileUri(
+        root: vscode.Uri,
+        baseName: string,
+        ext: string,
+    ): Promise<vscode.Uri> {
+        let attempt = 0;
+        while (true) {
+            const name = attempt === 0 ? `${baseName}${ext}` : `${baseName} (${attempt})${ext}`;
+            const uri = vscode.Uri.joinPath(root, name);
+            try {
+                await vscode.workspace.fs.stat(uri);
+                attempt += 1;
+            } catch {
+                return uri;
+            }
+        }
+    }
 
-    private static formatAnalysisContent(data: { summary: string; tree: string; content: string }): string {
+    private static formatAnalysisContent(data: {
+        summary: string;
+        tree: string;
+        content: string;
+    }): string {
         return [
             '# Repository Analysis\n',
             '## Summary\n',
@@ -34,7 +59,7 @@ export class WorkspaceService {
             '\n## Directory Structure\n',
             data.tree,
             '\n## Files Content\n',
-            data.content
+            data.content,
         ].join('\n');
     }
 }

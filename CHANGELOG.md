@@ -4,11 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.3.0] - Cross-OS save and safer Python
+
+Added
+
+- Save to File now writes to the workspace root on all OS. If `digest.txt` exists, it saves as `digest (n).txt` automatically.
+- Safer Python invocation using argument-array spawn (no shell string building). Works reliably on Windows, macOS, and Linux.
+- Python detection improved on Windows: supports `py -3`, `python`, and `python3`.
+- Virtual environment setup is more robust: tries built-in `venv`, falls back to `virtualenv` if needed; installs `gitingest` in user site or venv accordingly.
+
+Changed
+
+- Removed Save As dialog to ensure a predictable root-level output file for automation.
+
+---
+
 ## [0.2.0] - Promoted experimental features to stable 🎉
 
-* Built-in CLI execution (no global install needed)
-* Support for private and non-Git folders
-* Improved performance and lightweight analysis
+- Built-in CLI execution (no global install needed)
+- Support for private and non-Git folders
+- Improved performance and lightweight analysis
 
 ## [0.1.0] – Experimental Preview
 
@@ -16,10 +31,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-* 🧪 **Built-in GitIngest execution** – You no longer need to install the `gitingest` CLI globally.
-* 🧪 Introduced a **toggle in settings** to opt into experimental features.
-* 🧪 Marked this version as a **preview** so users can opt in safely.
-* 🧪 Behind-the-scenes setup for **supporting private and non-Git codebases** in the future.
+- 🧪 **Built-in GitIngest execution** – You no longer need to install the `gitingest` CLI globally.
+- 🧪 Introduced a **toggle in settings** to opt into experimental features.
+- 🧪 Marked this version as a **preview** so users can opt in safely.
+- 🧪 Behind-the-scenes setup for **supporting private and non-Git codebases** in the future.
 
 ---
 
@@ -27,8 +42,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-* ✅ Right-click context menu support in the VS Code Explorer.
-* ✅ Improved CLI error handling and usage flow.
+- ✅ Right-click context menu support in the VS Code Explorer.
+- ✅ Improved CLI error handling and usage flow.
 
 ---
 
@@ -36,5 +51,5 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-* ✅ Analyze current folder using GitIngest CLI.
-* ✅ Supports GitHub public repositories via CLI (requires global install).
+- ✅ Analyze current folder using GitIngest CLI.
+- ✅ Supports GitHub public repositories via CLI (requires global install).

@@ -5,7 +5,7 @@ import { createHtmlDocument } from '../utils/html';
 import { icons } from '../utils/icons';
 
 export function getSetupGuideContent(): string {
-  const content = `
+    const content = `
     <div class="shadow-wrapper">
       <div class="content-wrapper">
         <div class="setup-guide">
@@ -104,10 +104,10 @@ export function getSetupGuideContent(): string {
 
           <div class="setup-footer">
             ${Button({
-    onClick: 'startAnalysis()',
-    icon: icons.play,
-    children: 'Start Analysis'
-  })}
+                onClick: 'startAnalysis()',
+                icon: icons.play,
+                children: 'Start Analysis',
+            })}
           </div>
         </div>
       </div>
@@ -126,9 +126,11 @@ export function getSetupGuideContent(): string {
     </script>
   `;
 
-  const styles = getBaseStyles(THEME) + `
+    const styles =
+        getBaseStyles(THEME) +
+        `
  .setup-guide {max-width: 800px;margin: 0 auto;}.setup-header {text-align: center;margin-bottom: 3rem;}.setup-icon {width: 64px;height: 64px;margin: 0 auto 1rem;color: #1a1a1a;animation: pulse 2s infinite;}@keyframes pulse {0% {transform: scale(1);}50% {transform: scale(1.05);}100% {transform: scale(1);}}.setup-title {font-size: 2.5rem;font-weight: 700;color: #1a1a1a;margin-bottom: 0.5rem;}.setup-subtitle {font-size: 1.1rem;color: #666;}.setup-steps {display: flex;flex-direction: column;gap: 2rem;}.setup-step {display: flex;gap: 1.5rem;padding: 1.5rem;background: #fff4da;border: 3px solid #1a1a1a;border-radius: 12px;position: relative;}.setup-step::before {content: '';position: absolute;inset: 0;background: #1a1a1a;border-radius: 12px;transform: translate(4px, 4px);z-index: -1;}.step-number {width: 40px;height: 40px;background: #ffc480;border: 3px solid #1a1a1a;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-weight: 700;font-size: 1.2rem;flex-shrink: 0;}.step-content {flex-grow: 1;}.step-title {font-size: 1.5rem;font-weight: 600;margin-bottom: 1rem;color: #1a1a1a;margin-top: 0;}.step-description p {margin-bottom: 1rem;color: #1a1a1a;}.step-card {background: #fff;border: 3px solid #1a1a1a;border-radius: 8px;padding: 1rem;}.card-item {display: flex;align-items: center;gap: 1rem;padding: 0.75rem;border-bottom: 2px solid #f0f0f0;}.card-item:last-child {border-bottom: none;}.card-icon {color: #1a1a1a;height: 20px;}.card-text {font-size: 1rem;color: #1a1a1a;}.card-link {color: #0366d6;text-decoration: none;font-weight: 500;}.card-link:hover {text-decoration: underline;}.code-block-wrapper {margin: 1rem 0;}.code-block {background: #1a1a1a;border-radius: 8px;padding: 1rem;margin-bottom: 0.5rem;display: flex;justify-content: space-between;align-items: center;}.code-block code {color: #fff;font-family: 'Menlo', 'Monaco', 'Courier New', monospace;}.code-note {font-size: 0.9rem;color: #666;margin: 0.5rem 0;}.copy-button {background: transparent;border: none;color: #fff;cursor: pointer;padding: 0.25rem;border-radius: 4px;transition: background-color 0.2s;}.copy-button:hover {background: rgba(255, 255, 255, 0.1);}.inline-code {background: #1a1a1a;color: #fff;padding: 0.2rem 0.4rem;border-radius: 4px;font-family: 'Menlo', 'Monaco', 'Courier New', monospace;font-size: 0.9rem;}.usage-steps {display: flex;flex-direction: column;gap: 1rem;}.usage-step {display: flex;align-items: center;gap: 1rem;padding: 1rem;background: #fff;border: 2px solid #1a1a1a;border-radius: 8px;}.usage-icon {color: #1a1a1a;height: 20px;}.usage-text {color: #1a1a1a;font-size: 1rem;}kbd {background: #1a1a1a;color: #fff;padding: 0.2rem 0.4rem;border-radius: 4px;font-family: 'Menlo', 'Monaco', 'Courier New', monospace;font-size: 0.9rem;margin: 0 0.2rem;}.setup-footer {margin-top: 3rem;text-align: center;}.setup-footer button {font-size: 1.1rem;padding: 1rem 2rem;}@media (max-width: 640px) {.setup-step {flex-direction: column;}.step-number {margin-bottom: 1rem;}}
   `;
 
-  return createHtmlDocument(content, styles);
+    return createHtmlDocument(content, styles);
 }

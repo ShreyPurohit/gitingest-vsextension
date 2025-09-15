@@ -1,20 +1,47 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
-import { promisify } from 'util';
 import { ERROR_MESSAGES } from '../config';
 import { OsUtils } from './osUtils';
 
-const execAsync = promisify(exec);
+type RunResult = { stdout: string; stderr: string; code: number };
+
+async function runCommand(cmd: string, args: string[], cwd?: string): Promise<RunResult> {
+    return new Promise((resolve, reject) => {
+        const child = spawn(cmd, args, { cwd, shell: false });
+        let stdout = '';
+        let stderr = '';
+
+        child.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+        child.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+        child.on('error', (err) => reject(err));
+        child.on('close', (code) => {
+            if (code === 0) {
+                resolve({ stdout, stderr, code: code ?? 0 });
+            } else {
+                const error = new Error(
+                    stderr || stdout || `Command failed: ${cmd} ${args.join(' ')}`,
+                );
+                (error as any).code = code;
+                reject(error);
+            }
+        });
+    });
+}
 
 export class PythonHandler {
     private static instance: PythonHandler;
-    private pythonCommand: string = '';
+    private pythonCmd: string = '';
+    private pythonArgs: string[] = [];
     private venvPath: string = '';
     private venvPython: string = '';
     private userSitePackages: boolean = false;
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance(): PythonHandler {
         if (!PythonHandler.instance) {
@@ -23,48 +50,66 @@ export class PythonHandler {
         return PythonHandler.instance;
     }
 
-    private async findPythonCommand(): Promise<string> {
-        const commands = OsUtils.getPythonCommands();
-
+    private async findPythonCommand(): Promise<{ cmd: string; args: string[] }> {
+        const candidates = OsUtils.getPythonCommands();
+        const attempts = candidates.map(async ({ cmd, args }) => {
+            const res = await runCommand(cmd, [...args, '--version']);
+            const combined = (res.stdout + ' ' + res.stderr).toLowerCase();
+            if (!combined.includes('python')) {
+                throw new Error('Not Python');
+            }
+            if (!combined.includes('3.')) {
+                throw new Error('Not Python 3');
+            }
+            return { cmd, args };
+        });
         try {
-            const checkCommand = async (cmd: string): Promise<string> => {
-                const { stdout } = await execAsync(`${cmd} --version`);
-                if (!stdout.toLowerCase().includes('python 3')) {
-                    throw new Error('Not Python 3');
-                }
-                return cmd;
-            };
-
-            const commandPromises = commands.map(cmd => checkCommand(cmd));
-            return await Promise.any(commandPromises);
+            return await (Promise as any).any(attempts);
         } catch {
             throw new Error(ERROR_MESSAGES.PYTHON_NOT_INSTALLED);
         }
     }
 
-    private async checkVenvModule(pythonCmd: string): Promise<boolean> {
+    private async checkVenvModule(pythonCmd: string, pythonArgs: string[]): Promise<boolean> {
         try {
-            await execAsync(`${pythonCmd} -c "import venv"`);
+            await runCommand(pythonCmd, [...pythonArgs, '-c', 'import venv']);
             return true;
         } catch {
-            // Try installing venv using pip in user site-packages
-            try {
-                await execAsync(`${pythonCmd} -m pip install --user virtualenv`);
-                return true;
-            } catch {
-                throw new Error(ERROR_MESSAGES.VENV_NOT_INSTALLED);
-            }
+            return false;
         }
+    }
+
+    private async ensureVirtualenvInstalled(
+        pythonCmd: string,
+        pythonArgs: string[],
+    ): Promise<void> {
+        await runCommand(pythonCmd, [
+            ...pythonArgs,
+            '-m',
+            'pip',
+            'install',
+            '--user',
+            'virtualenv',
+        ]);
     }
 
     private async installGitIngestUserSite(): Promise<void> {
         try {
-            if (!this.pythonCommand) {
-                this.pythonCommand = await this.findPythonCommand();
+            if (!this.pythonCmd) {
+                const found = await this.findPythonCommand();
+                this.pythonCmd = found.cmd;
+                this.pythonArgs = found.args;
             }
 
             // Install gitingest in user's site-packages
-            await execAsync(`${this.pythonCommand} -m pip install --user gitingest`);
+            await runCommand(this.pythonCmd, [
+                ...this.pythonArgs,
+                '-m',
+                'pip',
+                'install',
+                '--user',
+                'gitingest',
+            ]);
             this.userSitePackages = true;
         } catch (error) {
             throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
@@ -73,17 +118,29 @@ export class PythonHandler {
 
     private async tryCreateVenvInPath(targetPath: string): Promise<boolean> {
         try {
-            if (!this.pythonCommand) {
-                this.pythonCommand = await this.findPythonCommand();
+            if (!this.pythonCmd) {
+                const found = await this.findPythonCommand();
+                this.pythonCmd = found.cmd;
+                this.pythonArgs = found.args;
             }
 
-            await this.checkVenvModule(this.pythonCommand);
-            
-            // Create new virtual environment
-            await execAsync(`${this.pythonCommand} -m venv "${targetPath}"`);
+            const hasVenv = await this.checkVenvModule(this.pythonCmd, this.pythonArgs);
+            if (hasVenv) {
+                await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'venv', targetPath]);
+                return true;
+            }
+
+            // Fallback to virtualenv if built-in venv is unavailable
+            try {
+                await this.ensureVirtualenvInstalled(this.pythonCmd, this.pythonArgs);
+            } catch {
+                throw new Error(ERROR_MESSAGES.VENV_NOT_INSTALLED);
+            }
+            await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'virtualenv', targetPath]);
             return true;
-        } catch (error) {
-            if (error instanceof Error && error.message.includes('permission denied')) {
+        } catch (error: any) {
+            const msg = (error?.message || '').toLowerCase();
+            if (msg.includes('permission denied')) {
                 throw new Error(ERROR_MESSAGES.PERMISSION_ERROR);
             }
             throw error;
@@ -98,10 +155,10 @@ export class PythonHandler {
         } catch (error) {
             // If user site-packages installation fails, try venv approach
             console.log('User site-packages installation failed, trying venv...');
-            
+
             // First try in project directory
             const projectVenvPath = path.join(projectPath, '.venv');
-            
+
             // Then try in user's home directory if project directory fails
             const homeVenvPath = path.join(os.homedir(), '.gitingest-venv');
 
@@ -114,7 +171,9 @@ export class PythonHandler {
                 finalVenvPath = projectVenvPath;
             } catch (error) {
                 if (error instanceof Error && error.message === ERROR_MESSAGES.PERMISSION_ERROR) {
-                    console.log('Failed to create venv in project directory, trying home directory...');
+                    console.log(
+                        'Failed to create venv in project directory, trying home directory...',
+                    );
                     try {
                         await this.tryCreateVenvInPath(homeVenvPath);
                         venvCreated = true;
@@ -130,11 +189,10 @@ export class PythonHandler {
             if (venvCreated) {
                 this.venvPath = finalVenvPath;
                 this.venvPython = OsUtils.getVenvPythonPath(this.venvPath);
-                const pipCommand = OsUtils.getVenvPipPath(this.venvPath);
 
                 try {
-                    await execAsync(`"${this.venvPython}" -m pip install --upgrade pip`);
-                    await execAsync(`"${pipCommand}" install gitingest`);
+                    await runCommand(this.venvPython, ['-m', 'pip', 'install', '--upgrade', 'pip']);
+                    await runCommand(this.venvPython, ['-m', 'pip', 'install', 'gitingest']);
                 } catch (error) {
                     throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
                 }
@@ -144,7 +202,9 @@ export class PythonHandler {
 
     public async verifyPythonInstallation(): Promise<boolean> {
         try {
-            this.pythonCommand = await this.findPythonCommand();
+            const found = await this.findPythonCommand();
+            this.pythonCmd = found.cmd;
+            this.pythonArgs = found.args;
             return true;
         } catch (error) {
             console.error('Python verification failed:', error);
@@ -164,17 +224,21 @@ export class PythonHandler {
 
     public async executeScript(scriptPath: string, args: string[]): Promise<string> {
         try {
-            const command = this.userSitePackages
-                ? `${this.pythonCommand} "${scriptPath}" ${args.map(arg => `"${arg}"`).join(' ')}`
-                : `"${this.venvPython}" "${scriptPath}" ${args.map(arg => `"${arg}"`).join(' ')}`;
-
-            const { stdout, stderr } = await execAsync(command);
-
-            if (stderr) {
-                throw new Error(stderr);
+            let cmd: string;
+            let baseArgs: string[] = [];
+            if (this.userSitePackages) {
+                if (!this.pythonCmd) {
+                    const found = await this.findPythonCommand();
+                    this.pythonCmd = found.cmd;
+                    this.pythonArgs = found.args;
+                }
+                cmd = this.pythonCmd;
+                baseArgs = [...this.pythonArgs];
+            } else {
+                cmd = this.venvPython;
             }
-
-            return stdout;
+            const res = await runCommand(cmd, [...baseArgs, scriptPath, ...args]);
+            return res.stdout;
         } catch (error) {
             console.error('Script execution failed:', error);
             throw error;
@@ -182,6 +246,8 @@ export class PythonHandler {
     }
 
     public setPythonCommand(command: string): void {
-        this.pythonCommand = command;
+        // Backwards-compat: allow setting a direct command string
+        this.pythonCmd = command;
+        this.pythonArgs = [];
     }
 }

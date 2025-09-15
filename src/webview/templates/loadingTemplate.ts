@@ -6,7 +6,7 @@ import { createHtmlDocument } from '../utils/html';
 import { getStatusIcon } from '../utils/statusIcons';
 
 export function getLoadingContent(statusMessages: StatusMessage[]): string {
-  const content = `
+    const content = `
     <div class="shadow-wrapper">
       <div class="content-wrapper">
         <div class="loading-container">
@@ -17,19 +17,23 @@ export function getLoadingContent(statusMessages: StatusMessage[]): string {
             </div>
             
             <div class="status-container">
-              ${statusMessages.map(msg => `
+              ${statusMessages
+                  .map(
+                      (msg) => `
                 <div class="status-item ${msg.type}">
                   <span class="status-icon">${getStatusIcon(msg.type)}</span>
                   <span class="status-text">${msg.text}</span>
                 </div>
-              `).join('')}
+              `,
+                  )
+                  .join('')}
             </div>
 
             ${Button({
-    onClick: 'cancelAnalysis()',
-    variant: 'danger',
-    children: 'Cancel Analysis'
-  })}
+                onClick: 'cancelAnalysis()',
+                variant: 'danger',
+                children: 'Cancel Analysis',
+            })}
           </div>
         </div>
       </div>
@@ -41,5 +45,5 @@ export function getLoadingContent(statusMessages: StatusMessage[]): string {
     </script>
   `;
 
-  return createHtmlDocument(content, getBaseStyles(THEME));
+    return createHtmlDocument(content, getBaseStyles(THEME));
 }

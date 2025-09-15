@@ -17,11 +17,18 @@ export class OsUtils {
         return process.platform === 'linux';
     }
 
-    static getPythonCommands(): string[] {
+    static getPythonCommands(): { cmd: string; args: string[] }[] {
         if (this.isWindows()) {
-            return ['python', 'python3', 'py -3'];
+            return [
+                { cmd: 'py', args: ['-3'] },
+                { cmd: 'python', args: [] },
+                { cmd: 'python3', args: [] },
+            ];
         }
-        return ['python3', 'python'];
+        return [
+            { cmd: 'python3', args: [] },
+            { cmd: 'python', args: [] },
+        ];
     }
 
     static getVenvPythonPath(venvPath: string): string {
