@@ -1,104 +1,109 @@
 {
-  "name": "gitingest",
-  "displayName": "Gitingest",
-  "description": "Turn any repository into a simple text digest of its codebase.",
-  "version": "0.2.0",
-  "publisher": "iamshreydxv",
-  "engines": {
-    "vscode": "^1.63.0"
-  },
-  "icon": "assets/gitingest-icon.png",
-  "categories": [
-    "Visualization",
-    "Other"
-  ],
-  "activationEvents": [],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "vscode-gitingest.analyze",
-        "title": "GitIngest: Analyze Current Folder"
-      },
-      {
-        "command": "vscode-gitingest.setup",
-        "title": "GitIngest: Setup Requirements"
-      },
-      {
-        "command": "vscode-gitingest.analyzeFolder",
-        "title": "GitIngest: Analyze This Folder"
-      }
+    "name": "gitingest",
+    "displayName": "Gitingest",
+    "description": "Turn any repository into a simple text digest of its codebase.",
+    "version": "0.3.0",
+    "publisher": "iamshreydxv",
+    "engines": {
+        "vscode": "^1.63.0"
+    },
+    "icon": "assets/gitingest-icon.png",
+    "categories": [
+        "Visualization",
+        "Other"
     ],
-    "menus": {
-      "explorer/context": [
-        {
-          "when": "explorerResourceIsFolder",
-          "command": "vscode-gitingest.analyzeFolder",
-          "group": "navigation"
+    "activationEvents": [],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "vscode-gitingest.analyze",
+                "title": "GitIngest: Analyze Current Folder"
+            },
+            {
+                "command": "vscode-gitingest.setup",
+                "title": "GitIngest: Setup Requirements"
+            },
+            {
+                "command": "vscode-gitingest.analyzeFolder",
+                "title": "GitIngest: Analyze This Folder"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "when": "explorerResourceIsFolder",
+                    "command": "vscode-gitingest.analyzeFolder",
+                    "group": "navigation"
+                }
+            ]
         }
-      ]
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.54.0",
-    "@types/node": "20.x",
-    "@typescript-eslint/eslint-plugin": "^8.10.0",
-    "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.13.0",
-    "esbuild": "^0.24.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.6.3"
-  },
-  "keywords": [
-    "gitingest",
-    "gitingest-analyze",
-    "git",
-    "ingest",
-    "analyze",
-    "repository",
-    "ai summary"
-  ],
-  "badges": [
-    {
-      "url": "https://img.shields.io/badge/license-MIT-blue.svg",
-      "href": "https://opensource.org/licenses/MIT",
-      "description": "MIT License"
-    }
-  ],
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
-    }
-  ],
-  "readme": "README.md",
-  "author": {
-    "name": "Shrey Purohit",
-    "email": "purohitshrey9@gmail.com"
-  },
-  "galleryBanner": {
-    "color": "#fff4da",
-    "theme": "light"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ShreyPurohit/gitingest-vsextension"
-  },
-  "qna": "https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest&ssr=false#qna",
-  "bugs": {
-    "url": "https://github.com/ShreyPurohit/gitingest-vsextension/issues",
-    "email": "purohitshrey9@gmail.com"
-  },
-  "homepage": "https://gitingest.com/",
-  "license": "MIT"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "npm run check-types && npm run lint && node esbuild.js",
+        "watch": "npm-run-all -p watch:*",
+        "watch:esbuild": "node esbuild.js --watch",
+        "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+        "package": "npm run check-types && npm run lint && node esbuild.js --production",
+        "check-types": "tsc --noEmit",
+        "lint": "eslint src",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.54.0",
+        "@types/node": "20.x",
+        "@typescript-eslint/eslint-plugin": "^8.10.0",
+        "@typescript-eslint/parser": "^8.7.0",
+        "eslint": "^9.27.0",
+        "esbuild": "^0.25.9",
+        "npm-run-all": "^4.1.5",
+        "typescript": "^5.6.3",
+        "prettier": "^3.3.3",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.2.1"
+    },
+    "keywords": [
+        "gitingest",
+        "gitingest-analyze",
+        "git",
+        "ingest",
+        "analyze",
+        "repository",
+        "ai summary"
+    ],
+    "badges": [
+        {
+            "url": "https://img.shields.io/badge/license-MIT-blue.svg",
+            "href": "https://opensource.org/licenses/MIT",
+            "description": "MIT License"
+        }
+    ],
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    ],
+    "readme": "README.md",
+    "author": {
+        "name": "Shrey Purohit",
+        "email": "purohitshrey9@gmail.com"
+    },
+    "galleryBanner": {
+        "color": "#fff4da",
+        "theme": "light"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ShreyPurohit/gitingest-vsextension"
+    },
+    "qna": "https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest&ssr=false#qna",
+    "bugs": {
+        "url": "https://github.com/ShreyPurohit/gitingest-vsextension/issues",
+        "email": "purohitshrey9@gmail.com"
+    },
+    "homepage": "https://gitingest.com/",
+    "license": "MIT"
 }

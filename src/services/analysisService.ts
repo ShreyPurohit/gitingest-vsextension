@@ -35,23 +35,27 @@ export class AnalysisService {
         }
     }
 
-    public static async analyze(panel: vscode.WebviewPanel, targetPath: string, statusMessage: string): Promise<void> {
+    public static async analyze(
+        panel: vscode.WebviewPanel,
+        targetPath: string,
+        statusMessage: string,
+    ): Promise<void> {
         WebviewService.updateLoadingStatus(panel, [
             { text: 'Python installation verified ✓', type: 'success' },
             { text: 'GitIngest package verified ✓', type: 'success' },
-            { text: statusMessage, type: 'info' }
+            { text: statusMessage, type: 'info' },
         ]);
 
         const result = await this.getOutput(targetPath);
 
-        if (result.type === "error") {
+        if (result.type === 'error') {
             throw new Error(result.message);
         }
 
         if (result.data) {
             WebviewService.showResults(panel, result.data);
         } else {
-            throw new Error("Analysis result data is undefined");
+            throw new Error('Analysis result data is undefined');
         }
     }
 
@@ -59,13 +63,13 @@ export class AnalysisService {
         try {
             const output = await this.pythonHandler.executeScript(this.scriptPath, [repoPath]);
             return {
-                type: "success",
-                data: JSON.parse(output)
+                type: 'success',
+                data: JSON.parse(output),
             };
         } catch (error) {
             return {
-                type: "error",
-                message: error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR
+                type: 'error',
+                message: error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR,
             };
         }
     }

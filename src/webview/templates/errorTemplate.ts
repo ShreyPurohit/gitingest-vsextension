@@ -4,8 +4,12 @@ import { getBaseStyles } from '../styles/base';
 import { createHtmlDocument } from '../utils/html';
 import { icons } from '../utils/icons';
 
-export function getErrorContent(title: string, messages: string[], showSetupButton: boolean = true): string {
-  const content = `
+export function getErrorContent(
+    title: string,
+    messages: string[],
+    showSetupButton: boolean = true,
+): string {
+    const content = `
     <div class="shadow-wrapper">
       <div class="content-wrapper">
         <div class="error-container">
@@ -21,7 +25,9 @@ export function getErrorContent(title: string, messages: string[], showSetupButt
             <h2 class="error-title">${title}</h2>
             
             <div class="error-messages">
-              ${messages.map(msg => `
+              ${messages
+                  .map(
+                      (msg) => `
                 <div class="error-message">
                   <span class="error-message-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -32,24 +38,30 @@ export function getErrorContent(title: string, messages: string[], showSetupButt
                   </span>
                   <span class="error-message-text">${msg}</span>
                 </div>
-              `).join('')}
+              `,
+                  )
+                  .join('')}
             </div>
 
-            ${showSetupButton ? `
+            ${
+                showSetupButton
+                    ? `
               <div class="error-actions">
                 ${Button({
-    onClick: 'openSetupGuide()',
-    children: 'Show Setup Guide',
-    icon: icons.setup
-  })}
+                    onClick: 'openSetupGuide()',
+                    children: 'Show Setup Guide',
+                    icon: icons.setup,
+                })}
                 ${Button({
-    onClick: 'retryAnalysis()',
-    variant: 'primary',
-    children: 'Retry Analysis',
-    icon: icons.retry
-  })}
+                    onClick: 'retryAnalysis()',
+                    variant: 'primary',
+                    children: 'Retry Analysis',
+                    icon: icons.retry,
+                })}
               </div>
-            ` : ''}
+            `
+                    : ''
+            }
           </div>
         </div>
       </div>
@@ -64,5 +76,5 @@ export function getErrorContent(title: string, messages: string[], showSetupButt
     </script>
   `;
 
-  return createHtmlDocument(content, getBaseStyles(THEME));
+    return createHtmlDocument(content, getBaseStyles(THEME));
 }

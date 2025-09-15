@@ -2,6 +2,11 @@
 export interface WebviewMessage {
     command: 'analyze' | 'cancel' | 'copy' | 'showSetup' | 'saveToFile' | 'retry';
     text?: string;
+    data?: {
+        summary: string;
+        tree: string;
+        content: string;
+    };
 }
 
 // Configuration types

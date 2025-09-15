@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { WEBVIEW_OPTIONS } from '../config';
 import { StatusMessage, WebviewMessage } from '../types';
-import { getErrorContent, getLoadingContent, getResultsContent, getSetupGuideContent } from '../webview/templates';
+import {
+    getErrorContent,
+    getLoadingContent,
+    getResultsContent,
+    getSetupGuideContent,
+} from '../webview/templates';
 import { handleWebviewMessage } from './messageHandler';
 
 export class WebviewService {
@@ -10,7 +15,7 @@ export class WebviewService {
             'gitingestSetup',
             'GitIngest Setup Guide',
             vscode.ViewColumn.One,
-            WEBVIEW_OPTIONS
+            WEBVIEW_OPTIONS,
         );
 
         panel.webview.html = getSetupGuideContent();
@@ -22,7 +27,7 @@ export class WebviewService {
             'gitingestResults',
             title,
             vscode.ViewColumn.One,
-            WEBVIEW_OPTIONS
+            WEBVIEW_OPTIONS,
         );
     }
 
@@ -30,7 +35,7 @@ export class WebviewService {
         panel.webview.onDidReceiveMessage(
             (message: WebviewMessage) => handleWebviewMessage(message, panel),
             undefined,
-            []
+            [],
         );
     }
 
