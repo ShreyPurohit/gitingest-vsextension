@@ -4,14 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.0] - Add to Ingest
+
+Added
+
+- Explorer context menu adds "GitIngest: Add to Ingest" to stage selected files or folders into the staging folder.
+- Added setting 'gitingest.ingestFolderName' so you can choose the staging folder name (defaults to 'gitingest-ingest').
+- "Add to Ingest" only copies the selected top-level item into 'gitingest-ingest', appending numeric suffixes when names already exist.
+
+---
+
 ## [0.3.0] - Cross-OS save and safer Python
 
 Added
 
-- Save to File now writes to the workspace root on all OS. If `digest.txt` exists, it saves as `digest (n).txt` automatically.
+- Save to File now writes to the workspace root on all OS. If 'digest.txt' exists, it saves as 'digest (n).txt' automatically.
 - Safer Python invocation using argument-array spawn (no shell string building). Works reliably on Windows, macOS, and Linux.
-- Python detection improved on Windows: supports `py -3`, `python`, and `python3`.
-- Virtual environment setup is more robust: tries built-in `venv`, falls back to `virtualenv` if needed; installs `gitingest` in user site or venv accordingly.
+- Python detection improved on Windows: supports 'py -3', 'python', and 'python3'.
+- Virtual environment setup is more robust: tries built-in 'venv', falls back to 'virtualenv' if needed; installs 'gitingest' in user site or venv accordingly.
 
 Changed
 

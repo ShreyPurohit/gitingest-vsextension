@@ -17,3 +17,4 @@ assets/*.gif
 assets/*.webp
 .venv/*
 .github/*
+.env

@@ -2,7 +2,7 @@
     "name": "gitingest",
     "displayName": "Gitingest",
     "description": "Turn any repository into a simple text digest of its codebase.",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "publisher": "iamshreydxv",
     "engines": {
         "vscode": "^1.63.0"
@@ -27,6 +27,11 @@
             {
                 "command": "vscode-gitingest.analyzeFolder",
                 "title": "GitIngest: Analyze This Folder"
+            },
+            {
+                "command": "vscode-gitingest.addToIngest",
+                "title": "GitIngest: Add to Ingest",
+                "category": "GitIngest"
             }
         ],
         "menus": {
@@ -34,9 +39,25 @@
                 {
                     "when": "explorerResourceIsFolder",
                     "command": "vscode-gitingest.analyzeFolder",
-                    "group": "navigation"
+                    "group": "1_gitingest"
+                },
+                {
+                    "command": "vscode-gitingest.addToIngest",
+                    "when": "explorerResourceIsFolder || resourceExtname",
+                    "group": "1_gitingest"
                 }
             ]
+        },
+        "configuration": {
+            "title": "GitIngest",
+            "properties": {
+                "gitingest.ingestFolderName": {
+                    "type": "string",
+                    "default": "gitingest-ingest",
+                    "description": "Folder name used to stage files and folders when running GitIngest.",
+                    "scope": "resource"
+                }
+            }
         }
     },
     "scripts": {

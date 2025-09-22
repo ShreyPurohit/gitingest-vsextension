@@ -32,6 +32,7 @@ function registerCommands(): vscode.Disposable[] {
         vscode.commands.registerCommand(COMMANDS.setup, handleSetup),
         vscode.commands.registerCommand(COMMANDS.analyze, handleAnalyze),
         vscode.commands.registerCommand(COMMANDS.analyzeFolder, handleAnalyzeFolder),
+        vscode.commands.registerCommand(COMMANDS.addToIngest, handleAddToIngest),
     ];
 }
 
@@ -99,5 +100,20 @@ async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
+    }
+}
+
+async function handleAddToIngest(resourceUri: vscode.Uri): Promise<void> {
+    if (!resourceUri) {
+        vscode.window.showErrorMessage('No file or folder selected.');
+        return;
+    }
+
+    try {
+        await WorkspaceService.addToIngest(resourceUri);
+    } catch (error) {
+        const message =
+            error instanceof Error ? error.message : 'Failed to add the selected item to ingest.';
+        vscode.window.showErrorMessage(message);
     }
 }
