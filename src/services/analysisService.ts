@@ -54,6 +54,16 @@ export class AnalysisService {
 
         if (result.data) {
             WebviewService.showResults(panel, result.data);
+            // After successfully showing results, attempt to clean up staged ingest folder
+            try {
+                const workspaceRoot = WorkspaceService.getWorkspaceFolder();
+                if (workspaceRoot) {
+                    await WorkspaceService.cleanupIngestFolder(workspaceRoot.uri);
+                }
+            } catch (cleanupError) {
+                // Log but don't disrupt successful analysis result display
+                console.error('Error cleaning up ingest folder:', cleanupError);
+            }
         } else {
             throw new Error('Analysis result data is undefined');
         }

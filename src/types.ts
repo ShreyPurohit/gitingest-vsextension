@@ -34,3 +34,17 @@ export interface AnalysisResult {
     };
     message?: string;
 }
+
+export interface ButtonProps {
+    onClick: string;
+    variant?: 'primary' | 'danger';
+    icon?: string;
+    children: string;
+}
+
+export interface SectionProps {
+    title: string;
+    content: string;
+    copyButton?: boolean;
+    copyFunction?: string;
+}

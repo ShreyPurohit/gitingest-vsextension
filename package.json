@@ -56,6 +56,12 @@
                     "default": "gitingest-ingest",
                     "description": "Folder name used to stage files and folders when running GitIngest.",
                     "scope": "resource"
+                },
+                "gitingest.deleteAfterIngest": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to delete the staged files and folders after running GitIngest.",
+                    "scope": "resource"
                 }
             }
         }

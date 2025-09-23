@@ -6,7 +6,7 @@ import {
     getLoadingContent,
     getResultsContent,
     getSetupGuideContent,
-} from '../webview/templates';
+} from '../webview';
 import { handleWebviewMessage } from './messageHandler';
 
 export class WebviewService {

@@ -59,6 +59,8 @@ export class WorkspaceService {
 
         await vscode.workspace.fs.createDirectory(ingestRoot);
 
+        // (No marker file is created here — the ingest folder is managed directly.)
+
         const stat = await vscode.workspace.fs.stat(resourceUri);
         const baseName = path.basename(resourcePath);
         if (!baseName) {
@@ -176,5 +178,53 @@ export class WorkspaceService {
         }
 
         return sanitized;
+    }
+
+    /**
+     * Delete the ingest root folder if the workspace configuration requests it.
+     * This is a no-op when the setting `gitingest.deleteAfterIngest` is false or
+     * when the ingest folder does not exist.
+     */
+    public static async cleanupIngestFolder(workspaceRoot: vscode.Uri): Promise<void> {
+        const config = vscode.workspace.getConfiguration('gitingest', workspaceRoot);
+        const deleteAfter = config.get<boolean>('deleteAfterIngest', false);
+        if (!deleteAfter) {
+            return;
+        }
+
+        const ingestRoot = this.getIngestRoot(workspaceRoot);
+
+        try {
+            // Check existence first
+            await vscode.workspace.fs.stat(ingestRoot);
+        } catch {
+            // Nothing to delete
+            return;
+        }
+
+        // Safety: ensure ingestRoot is inside the workspaceRoot
+        try {
+            const rel = path.relative(workspaceRoot.fsPath, ingestRoot.fsPath);
+            if (rel.startsWith('..') || path.isAbsolute(rel)) {
+                console.error(
+                    'Ingest folder is not a child of workspace root; aborting delete',
+                    ingestRoot.fsPath,
+                );
+                return;
+            }
+        } catch (e) {
+            console.error('Failed to determine path relation for ingest cleanup', e);
+            return;
+        }
+
+        try {
+            await vscode.workspace.fs.delete(ingestRoot, { recursive: true, useTrash: true });
+            vscode.window.showInformationMessage(`Deleted ingest folder: ${ingestRoot.fsPath}`);
+        } catch (err) {
+            const msg =
+                err instanceof Error ? err.message : 'Unknown error while deleting ingest folder';
+            console.error('Failed to delete ingest folder', err);
+            vscode.window.showErrorMessage(`Failed to delete ingest folder: ${msg}`);
+        }
     }
 }
