@@ -28,13 +28,13 @@ _Deep insights, modern UI, and effortless integration into your workflow._
 
 ## What is GitIngest?
 
-GitIngest is a powerful code editor extension that provides **comprehensive codebase analysis** directly within your editor. Whether you're working with Git repositories or local folders, GitIngest helps you understand your project structure, analyze code patterns, and export insights—all without leaving your development environment.
+GitIngest is a code editor extension that analyzes your entire codebase—Git repos or local folders—so you can explore structure, detect patterns, and export insights without leaving your editor.
 
 ### 🌟 Why Choose GitIngest?
 
 <table>
 <tr>
-<td width="50%">
+<td>
 
 **🔧 Zero Setup Required**
 
@@ -43,7 +43,7 @@ GitIngest is a powerful code editor extension that provides **comprehensive code
 - Works offline with 100% local execution
 
 </td>
-<td width="50%">
+<td>
 
 **🌍 Universal Compatibility**
 
@@ -61,7 +61,7 @@ GitIngest is a powerful code editor extension that provides **comprehensive code
 
 <table>
 <tr>
-<td width="50%">
+<td>
 
 ### 🎨 **Modern Interface**
 
@@ -72,7 +72,7 @@ GitIngest is a powerful code editor extension that provides **comprehensive code
 - One-click copy functionality
 
 </td>
-<td width="50%">
+<td>
 
 ### 🔍 **Smart Analysis**
 
@@ -85,7 +85,7 @@ GitIngest is a powerful code editor extension that provides **comprehensive code
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td>
 
 ### ⚡ **Seamless Integration**
 
@@ -95,7 +95,7 @@ GitIngest is a powerful code editor extension that provides **comprehensive code
 - Instant results in webview
 
 </td>
-<td width="50%">
+<td>
 
 ### 🛠 **Flexible Workflow**
 
@@ -326,23 +326,32 @@ Access via **File > Preferences > Settings > Extensions > GitIngest**:
 
 Your privacy and security are our top priorities:
 
-### 🔒 100% Local Execution
+<details>
+<summary>🔒 100% Local Execution</summary>
 
 - All analysis happens on your machine
 - No code sent to external servers
 - No internet connection required
 
-### 🔐 Zero Data Collection
+</details>
+
+<details>
+<summary>🔐 Zero Data Collection</summary>
 
 - We don't collect or store any of your code
 - No telemetry or usage tracking
 - Your intellectual property stays private
 
-### 🛡️ Safe Operation
+</details>
+
+<details>
+<summary>🛡️ Safe Operation</summary>
 
 - Read-only analysis of your files
 - No modifications to your codebase
 - Optional cleanup features with user consent
+
+</details>
 
 ---
 
