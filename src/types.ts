@@ -1,6 +1,6 @@
 // Message types
 export interface WebviewMessage {
-    command: 'analyze' | 'cancel' | 'copy' | 'showSetup' | 'saveToFile' | 'retry';
+    command: 'analyze' | 'cancel' | 'copy' | 'saveToFile' | 'retry';
     text?: string;
     data?: {
         summary: string;
@@ -33,4 +33,18 @@ export interface AnalysisResult {
         content: string;
     };
     message?: string;
+}
+
+export interface ButtonProps {
+    onClick: string;
+    variant?: 'primary' | 'danger';
+    icon?: string;
+    children: string;
+}
+
+export interface SectionProps {
+    title: string;
+    content: string;
+    copyButton?: boolean;
+    copyFunction?: string;
 }

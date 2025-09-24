@@ -11,9 +11,9 @@ export const THEME: ThemeColors = {
 };
 
 export const COMMANDS = {
-    setup: 'vscode-gitingest.setup',
     analyze: 'vscode-gitingest.analyze',
     analyzeFolder: 'vscode-gitingest.analyzeFolder',
+    addToIngest: 'vscode-gitingest.addToIngest',
 } as const;
 
 export const WEBVIEW_OPTIONS = {
