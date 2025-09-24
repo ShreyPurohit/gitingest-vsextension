@@ -365,34 +365,11 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## 🙌 Acknowledgments
 
-Special thanks to:
-
-- 💙 **[GitIngest](https://github.com/cyclotruc/gitingest)** - The powerful core engine
-- 💙 **VS Code API** - Enabling seamless editor integration
-- 💙 **Our Community** - Users who provide feedback and help improve the extension
-
----
-
-<div align="center">
-
-**Made with ❤️ for developers worldwide**
-
----
-
-> ⭐ If this extension helped you, please consider giving it a star on the [GitHub](https://github.com/ShreyPurohit/gitingest-vsextension/) and marketplace!
-
-</div>
-E](LICENSE) file for details.
-
-<hr style="border: 2px solid black; width: 100%; " />
-
-## 🙌 Acknowledgments
-
 💙 [GitIngest](https://gitingest.org/) – Core engine.  
 💙 **VS Code API** – Enabling smooth integration.
-
-<hr style="border: 2px solid black; width: 100%; " />
 
 <p align="center">
   <strong>Made with ❤️ for developers worldwide.</strong>
 </p>
+
+> ⭐ If this extension helped you, please consider giving it a star on the [GitHub](https://github.com/ShreyPurohit/gitingest-vsextension/) and marketplace!
