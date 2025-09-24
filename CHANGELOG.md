@@ -11,6 +11,12 @@ Added
 - Explorer context menu adds "GitIngest: Add to Ingest" to stage selected files or folders into the staging folder.
 - Added setting 'gitingest.ingestFolderName' so you can choose the staging folder name (defaults to 'gitingest-ingest').
 - "Add to Ingest" only copies the selected top-level item into 'gitingest-ingest', appending numeric suffixes when names already exist.
+- Added Setting 'gitingest.deleteAfterIngest' so you can choose to remove staging folder after once ingested
+
+Removed
+
+- Status Bar Button
+- Setup Page
 
 ---
 

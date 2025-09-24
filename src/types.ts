@@ -1,6 +1,6 @@
 // Message types
 export interface WebviewMessage {
-    command: 'analyze' | 'cancel' | 'copy' | 'showSetup' | 'saveToFile' | 'retry';
+    command: 'analyze' | 'cancel' | 'copy' | 'saveToFile' | 'retry';
     text?: string;
     data?: {
         summary: string;

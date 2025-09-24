@@ -21,9 +21,6 @@ export async function handleWebviewMessage(
             case 'copy':
                 await handleCopyCommand(message.text);
                 break;
-            case 'showSetup':
-                await vscode.commands.executeCommand('vscode-gitingest.setup');
-                break;
             case 'saveToFile':
                 await handleSaveToFile(message);
                 break;

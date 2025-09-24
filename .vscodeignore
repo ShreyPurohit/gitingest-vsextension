@@ -13,8 +13,9 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-assets/*.gif
-assets/*.webp
+assets/*
+!assets/gitingest-icon.png
 .venv/*
 .github/*
 .env
+.prettierignore

@@ -1,158 +1,394 @@
-<h1 align="center">🚀 GitIngest VS Code Extension</h1>
+<div align="center">
 
-<p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">
-    <img src="https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest" alt="Marketplace Version"/>
-  </a>
-  <a href="https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest?cacheSeconds=3600">
-    <img src="https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest?cacheSeconds=3600" alt="Downloads"/>
-  </a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest">
-    <img src="https://img.shields.io/visual-studio-marketplace/r/iamshreydxv.gitingest" alt="Ratings"/>
-  </a>
-</p>
+  <img src="./assets/Gitingest_Banner.png" alt="GitIngest Extension Banner" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+  
+_Deep insights, modern UI, and effortless integration into your workflow._
 
-<p align="center">
-  <strong>Seamlessly analyze your repositories inside VS Code!</strong>  
-  <br>GitIngest provides deep insights, a modern UI, and effortless integration into your workflow.
-</p>
+[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)
+[![Ratings](https://img.shields.io/visual-studio-marketplace/r/iamshreydxv.gitingest)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)
 
-<p align="center">
-  <img src="./assets/MainFunctioning.gif" alt="GitIngest VS Code Extension Demo">
-</p>
+</div>
 
-<hr style="border: 2px solid black; width: 100%; " />
+---
 
-## ✨ Features at a Glance
+## 📋 Table of Contents
 
-### 🎯 **Modern & Interactive UI**
+- [🎯 What is GitIngest?](#what-is-gitingest)
+- [✨ Key Features](#key-features)
+- [🚀 Quick Start](#quick-start)
+- [📖 Usage Guide](#usage-guide)
+- [📊 Understanding Your Analysis](#understanding-your-analysis)
+- [⚙️ Configuration & Settings](#configuration--settings)
+- [❓ Troubleshooting](#troubleshooting)
+- [🛡️ Privacy & Security](#privacy--security)
+- [🤝 Contributing](#contributing)
 
-✅ Beautiful Webview interface with a sleek design.  
-✅ Interactive three-panel layout (Summary, Directory, File Content).  
-✅ One-click copy for all analysis sections.  
-✅ Real-time progress indicators.  
-✅ Fully responsive design, adapts to different screen sizes.
+---
 
-### 🛠 **Smart & Comprehensive Analysis**
+## What is GitIngest?
 
-✅ Scans your entire codebase—Git or non-Git, public or private.  
-✅ No need for global CLI installation — built-in execution support.  
-✅ Excludes unnecessary files (build artifacts, binaries, IDE-specific files).  
-✅ Displays insights in an easy-to-read format.  
-✅ Searchable, copyable, and exportable results.
+GitIngest is a powerful code editor extension that provides **comprehensive codebase analysis** directly within your editor. Whether you're working with Git repositories or local folders, GitIngest helps you understand your project structure, analyze code patterns, and export insights—all without leaving your development environment.
 
-### 🔄 **Seamless VS Code Integration**
+### 🌟 Why Choose GitIngest?
 
-✅ Status Bar shortcut for quick access.  
-✅ Command Palette support ( `Ctrl/Cmd + Shift + P` ).  
-✅ Works across Windows, macOS, and Linux.
+<table>
+<tr>
+<td width="50%">
 
-### 📁 Analyzing a Specific Folder
+**🔧 Zero Setup Required**
 
-✅ Right-click on any folder in the Explorer view.  
-✅ Select "GitIngest: Analyze This Folder" from the context menu.  
-✅ View the analysis results specific to that folder.
+- No CLI installation needed
+- Everything runs within your editor
+- Works offline with 100% local execution
 
-## 🏗️ Prerequisites
+</td>
+<td width="50%">
 
-1. **Python 3.x** (Ensure it's added to system PATH)
-2. **VS Code 1.54.0 or higher**
+**🌍 Universal Compatibility**
 
-<hr style="border: 2px solid black; width: 100%; " />
+- Supports any codebase (Git or non-Git)
+- Cross-platform (Windows, macOS, Linux)
+- Smart filtering of unnecessary files
 
-## 🚀 How to Use
+</td>
+</tr>
+</table>
 
-### Open a local codebase
+---
 
-### Start GitIngest
+## Key Features
 
-1. **Via Explorer:** Right click on any specific folder and choose `Gitingest: Analyze this folder`
+<table>
+<tr>
+<td width="50%">
 
-<img src="./assets/Context-Menu.gif" alt="Context Click Activation" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); "><br>
+### 🎨 **Modern Interface**
 
-2. **Via Status Bar:** Click the GitIngest icon for one-click access.
+- Beautiful three-panel webview layout
+- Interactive directory tree visualization
+- Real-time progress indicators
+- Responsive design for all screen sizes
+- One-click copy functionality
 
-<img src="./assets/SingleClickOn.gif" alt="Single Click Activation" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); "><br>
+</td>
+<td width="50%">
 
-3. **Via Command Palette (`Ctrl/Cmd + Shift + P`)**
-    - Run **`GitIngest: Analyze Repository`** to start analysis.
-    - Run **`GitIngest: Show Setup Guide`** for setup help.
+### 🔍 **Smart Analysis**
 
-<img src="./assets/SetupGuide.gif" alt="Setup Guide" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
+- Comprehensive codebase scanning
+- Intelligent file filtering
+- Summary insights and metrics
+- Searchable and exportable results
+- Custom folder selection
 
-<hr style="border: 2px solid black; width: 100%; " />
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-## 📊 Analysis Breakdown
+### ⚡ **Seamless Integration**
 
-### **Summary Panel**
+- Right-click context menus
+- Command palette integration
+- No external dependencies
+- Instant results in webview
 
-- High-level repository overview.
-- Key insights and metrics.
-- Easily copyable format.
+</td>
+<td width="50%">
 
-### **Directory Structure**
+### 🛠 **Flexible Workflow**
 
-- Tree view of your project structure.
-- Filters out unnecessary files.
+- Analyze entire repositories
+- Target specific folders
+- Selective file inclusion
+- Optional cleanup after analysis
 
-### **File Content Analysis**
+</td>
+</tr>
+</table>
 
-- Highlights key file content.
-- Structured, and copyable.
+---
 
-<p align="center">
-  <strong>Save or export analysis data effortlessly:</strong><br>
-  <img src="./assets/MultipleOptions.webp" alt="Export Options" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
-</p>
+## Quick Start
 
-<hr style="border: 2px solid black; width: 100%; " />
+### Prerequisites
 
-## ⚙️ Configuration
+Before getting started, ensure you have:
 
-GitIngest automatically manages:  
-✔ **Python environment detection**  
-✔ **GitIngest package verification**  
-✔ **Platform-specific command execution**  
-✔ **Intelligent process management**
+1. **VS Code 1.54.0 or higher**
+2. **Python 3.x** installed and added to your system PATH
 
-<hr style="border: 2px solid black; width: 100%; " />
+> 💡 **Quick Check**: Open a terminal and run `python --version` or `python3 --version` to verify installation
 
-## 🛡️ Security
+### Installation & First Analysis
 
-✅ **100% Local Execution** – No external API calls, everything runs on your machine.  
-✅ **No Data Collection** – Your data stays private.
+1. **📦 Install the Extension**
+    - Open Editor Extensions (Ctrl/Cmd + Shift + X)
+    - Search for "GitIngest"
+    - Click Install
 
-<hr style="border: 2px solid black; width: 100%; " />
+2. **🎯 Analyze Your First Repository**
+    - Open any project folder in your editor
+    - Right-click on the folder in Explorer
+    - Select **"GitIngest: Analyze This Folder"**
+    - View results in the webview panel!
 
-## ❓ Troubleshooting
+---
 
-### **Common Issues & Fixes**
+## Usage Guide
 
-#### 🚧 **Python Not Found?**
+### Method 1: Quick Analysis (Recommended)
 
-✔ Ensure Python is installed and added to system PATH.  
-✔ Run **`GitIngest: Show Setup Guide`** in the command palette.
+<details>
+<summary><strong>🖱️ Right-Click Analysis</strong></summary>
 
-#### 🚧 **Analysis Failing?**
+**Perfect for immediate analysis of any folder**
 
-✔ Verify Python installation.  
-✔ Check user permissions.
+1. Right-click on any folder in your editor Explorer
+2. Choose **"GitIngest: Analyze This Folder"** for immediate analysis
+3. View results in the automatically opened webview panel
 
-<p align="center">
-  <img src="./assets/ErrorRecovery.gif" alt="Error Recovery" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); ">
-</p>
+</details>
 
-<hr style="border: 2px solid black; width: 100%; " />
+<div align="center">
+  <img src="./assets/Context-Menu.gif" alt="GitIngest Extension Demo" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+</div>
+
+### Method 2: Selective Analysis (Advanced)
+
+<details>
+<summary><strong>🎯 Cherry-Pick Your Files</strong></summary>
+
+**Ideal for large codebases where you only need specific parts analyzed**
+
+1. Right-click on files/folders while holding Ctrl/Cmd
+2. Select **"GitIngest: Add To Ingest"** for each item
+3. Once you've selected all desired items, run the analysis
+4. Optionally enable auto-cleanup in settings
+
+</details>
+
+<div align="center">
+  <img src="./assets/Add_To_Ingest.gif" alt="GitIngest Add To Ingest" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+</div>
+
+### Method 3: Command Palette
+
+<details>
+<summary><strong>⌨️ Keyboard-First Approach</strong></summary>
+
+1. Press `Ctrl/Cmd + Shift + P` to open Command Palette
+2. Type and select **"GitIngest: Analyze Repository"**
+3. Follow the prompts and review your analysis
+
+</details>
+
+---
+
+## Understanding Your Analysis
+
+Your analysis results are presented in **three comprehensive panels**:
+
+### 📋 Summary Panel
+
+```
+📈 Repository Overview
+├── 📁 Files Analyzed: 156
+├── 📊 Estimated Tokens: 12,450
+├── 🗂️ Directory Structure
+└── 📝 File Content Analysis
+```
+
+<div align="center">
+  <strong>Export Options Available:</strong><br>
+  <img src="./assets/MultipleOptions.webp" alt="Export Options" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+</div>
+
+### 🌳 Directory Structure
+
+Interactive tree view with smart filtering:
+
+- ✅ Source code files included
+- ❌ Build artifacts excluded
+- ❌ Node_modules filtered out
+- ❌ IDE-specific files hidden
+
+### 📄 File Content Analysis
+
+Detailed breakdown including:
+
+- Code snippets and key functions
+- Documentation and README files
+- Configuration files
+- Dependencies and imports
+
+**Available Export Formats:**
+
+- 📋 **Copy to Clipboard** - Quick sharing
+- 💾 **Save as Text** - Local backup
+
+---
+
+## Configuration & Settings
+
+<div align="center">
+  <img src="./assets/Settings.png" alt="Settings Configuration" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+</div>
+
+### Automatic Management
+
+GitIngest handles these automatically:
+
+- ✅ Python environment detection
+- ✅ GitIngest package verification
+- ✅ Platform-specific command execution
+- ✅ Intelligent process management
+
+### Customizable Options
+
+Access via **File > Preferences > Settings > Extensions > GitIngest**:
+
+- **File Exclusions** - Add custom patterns to ignore
+- **Analysis Depth** - Control analysis scope
+- **Auto Cleanup** - Enable/disable automatic staging cleanup
+- **UI Preferences** - Customize panel layouts
+
+---
+
+## Troubleshooting
+
+### Common Issues & Quick Fixes
+
+<details>
+<summary><strong>🐍 Python Not Found Error</strong></summary>
+
+**Problem:** Extension can't locate Python installation
+
+**Quick Solutions:**
+
+1. Install Python 3.x from [python.org](https://python.org)
+2. Ensure "Add Python to PATH" is checked during installation
+3. Restart your editor after installation
+4. Test with `python --version` in terminal
+
+**Platform-Specific Help:**
+
+- **Windows:** Use "Add Python to PATH" option during installation
+- **macOS:** Install via Homebrew: `brew install python3`
+- **Linux:** Install via package manager: `sudo apt install python3`
+
+</details>
+
+<details>
+<summary><strong>⚠️ Analysis Failing or Hanging</strong></summary>
+
+**Problem:** Analysis starts but doesn't complete
+
+**Solutions:**
+
+1. Check file permissions - Ensure your editor can read project files
+2. Close other Python processes - Free up system resources
+3. Restart your editor - Clear any stuck processes
+4. Try a smaller folder first - Test with a simple project
+
+**For Large Repositories:**
+
+- Use selective analysis instead of full repository scan
+- Exclude large directories (node_modules, .git, build folders)
+- Consider analyzing in smaller chunks
+
+</details>
+
+<details>
+<summary><strong>🔧 Extension Not Loading</strong></summary>
+
+**Problem:** GitIngest commands not appearing in Editor
+
+**Solutions:**
+
+1. Reload your editor - Use `Ctrl/Cmd + Shift + P > "Reload Window"`
+2. Check extension status - Ensure it's enabled in your Extensions panel
+3. Update your editor - Ensure you're using a compatible version
+4. Reinstall extension - Remove and reinstall from marketplace
+
+</details>
+
+### Need More Help?
+
+- 📝 Check the Developer Console: `Help > Toggle Developer Tools`
+- 🐛 Report bugs on [GitHub Issues](https://github.com/ShreyPurohit/gitingest-vsextension/issues)
+- 💬 Join discussions in our GitHub repository
+
+---
+
+## Privacy & Security
+
+Your privacy and security are our top priorities:
+
+### 🔒 100% Local Execution
+
+- All analysis happens on your machine
+- No code sent to external servers
+- No internet connection required
+
+### 🔐 Zero Data Collection
+
+- We don't collect or store any of your code
+- No telemetry or usage tracking
+- Your intellectual property stays private
+
+### 🛡️ Safe Operation
+
+- Read-only analysis of your files
+- No modifications to your codebase
+- Optional cleanup features with user consent
+
+---
+
+## Contributing
+
+### Ways to Help
+
+- 🌟 **Star the repository** - Help others discover GitIngest
+- 🐛 **Report bugs** - Help me improve the extension
+- 💡 **Suggest features** - Share your ideas for new functionality
+- 💡 **Connect with me** - [GitHub](https://github.com/ShreyPurohit/)
+
+---
 
 ## 📜 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for complete details.
+
+---
+
+## 🙌 Acknowledgments
+
+Special thanks to:
+
+- 💙 **[GitIngest](https://github.com/cyclotruc/gitingest)** - The powerful core engine
+- 💙 **VS Code API** - Enabling seamless editor integration
+- 💙 **Our Community** - Users who provide feedback and help improve the extension
+
+---
+
+<div align="center">
+
+**Made with ❤️ for developers worldwide**
+
+---
+
+> ⭐ If this extension helped you, please consider giving it a star on the [GitHub](https://github.com/ShreyPurohit/gitingest-vsextension/) and marketplace!
+
+</div>
+E](LICENSE) file for details.
 
 <hr style="border: 2px solid black; width: 100%; " />
 
 ## 🙌 Acknowledgments
 
-💙 [GitIngest](https://github.com/cyclotruc/gitingest) – Core engine.  
+💙 [GitIngest](https://gitingest.org/) – Core engine.  
 💙 **VS Code API** – Enabling smooth integration.
 
 <hr style="border: 2px solid black; width: 100%; " />

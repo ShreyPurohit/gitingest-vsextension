@@ -21,10 +21,6 @@
                 "title": "GitIngest: Analyze Current Folder"
             },
             {
-                "command": "vscode-gitingest.setup",
-                "title": "GitIngest: Setup Requirements"
-            },
-            {
                 "command": "vscode-gitingest.analyzeFolder",
                 "title": "GitIngest: Analyze This Folder"
             },
