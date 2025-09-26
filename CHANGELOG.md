@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.1] - Add to Ingest
+
+Fixed
+
+- Broken User Interations
+
 ## [0.4.0] - Add to Ingest
 
 Added
