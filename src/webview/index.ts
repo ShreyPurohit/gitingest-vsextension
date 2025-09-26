@@ -79,5 +79,5 @@ export function getResultsContent(data: {
 // Utils
 
 function createHtmlDocument(content: string, styles: string): string {
-    return `<!DOCTYPE html><html><head><style>${styles}</style></head><body>${content}<script>const vscode = acquireVsCodeApi();</script></body></html>`;
+    return `<!DOCTYPE html><html><head><style>${styles}</style><script>const vscode = acquireVsCodeApi();</script></head><body>${content}</body></html>`;
 }

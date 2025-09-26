@@ -1,15 +1,27 @@
 import * as vscode from 'vscode';
 import { WEBVIEW_OPTIONS } from '../config';
 import { StatusMessage } from '../types';
+import { handleWebviewMessage } from './messageHandler';
 import { getErrorContent, getLoadingContent, getResultsContent } from '../webview';
 
 export class WebviewService {
     public static createAnalysisPanel(title: string = 'GitIngest Analysis'): vscode.WebviewPanel {
-        return vscode.window.createWebviewPanel(
+        const panel = vscode.window.createWebviewPanel(
             'gitingestResults',
             title,
             vscode.ViewColumn.One,
             WEBVIEW_OPTIONS,
+        );
+        // Ensure webview message handling is always wired up
+        this.setupMessageHandler(panel);
+        return panel;
+    }
+
+    public static setupMessageHandler(panel: vscode.WebviewPanel): void {
+        panel.webview.onDidReceiveMessage(
+            (message) => handleWebviewMessage(message, panel),
+            undefined,
+            [],
         );
     }
 
