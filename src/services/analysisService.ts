@@ -6,12 +6,19 @@ import { PythonHandler } from '../utils/pythonHandler';
 import { WebviewService } from './webviewService';
 import { WorkspaceService } from './workspaceService';
 
+const LAST_INGESTED_PATH_KEY = 'gitingest.lastIngestedPath';
+
 export class AnalysisService {
     private static pythonHandler = PythonHandler.getInstance();
     private static scriptPath: string;
+    private static extensionContext: vscode.ExtensionContext | undefined;
 
     public static setScriptPath(context: vscode.ExtensionContext): void {
         this.scriptPath = context.asAbsolutePath(path.join('src', 'gitingest-script.py'));
+    }
+
+    public static setContext(context: vscode.ExtensionContext): void {
+        this.extensionContext = context;
     }
 
     public static async verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
@@ -53,7 +60,10 @@ export class AnalysisService {
         }
 
         if (result.data) {
-            WebviewService.showResults(panel, result.data);
+            WebviewService.showResults(panel, result.data, targetPath);
+            if (this.extensionContext) {
+                this.extensionContext.workspaceState.update(LAST_INGESTED_PATH_KEY, targetPath);
+            }
             // After successfully showing results, attempt to clean up staged ingest folder
             try {
                 const workspaceRoot = WorkspaceService.getWorkspaceFolder();

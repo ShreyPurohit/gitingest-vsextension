@@ -362,12 +362,12 @@ Your privacy and security are our top priorities:
 
 ## Contributing
 
-### Ways to Help
+GitIngest is open source and we welcome contributions.
 
-- 🌟 **Star the repository** - Help others discover GitIngest
-- 🐛 **Report bugs** - Help me improve the extension
-- 💡 **Suggest features** - Share your ideas for new functionality
-- 💡 **Connect with me** - [GitHub](https://github.com/ShreyPurohit/)
+- 🌟 **Star the repository** – Help others discover GitIngest
+- 🐛 **Report bugs** – [Open an issue](https://github.com/ShreyPurohit/gitingest-vsextension/issues)
+- 💡 **Suggest features** – Share ideas via [GitHub Discussions](https://github.com/ShreyPurohit/gitingest-vsextension/discussions) or issues
+- 🔧 **Contribute code** – See **[CONTRIBUTING.md](CONTRIBUTING.md)** for development setup, code style, and how to submit pull requests
 
 ---
 

@@ -6,6 +6,7 @@ describe('config', () => {
         assert.strictEqual(COMMANDS.analyze, 'vscode-gitingest.analyze');
         assert.strictEqual(COMMANDS.analyzeFolder, 'vscode-gitingest.analyzeFolder');
         assert.strictEqual(COMMANDS.addToIngest, 'vscode-gitingest.addToIngest');
+        assert.strictEqual(COMMANDS.reIngest, 'vscode-gitingest.reIngest');
     });
 
     it('ERROR_MESSAGES key entries are non-empty strings', () => {

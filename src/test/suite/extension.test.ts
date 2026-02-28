@@ -15,11 +15,15 @@ describe('Extension', () => {
     });
 
     it('contributed commands are registered', async () => {
+        const ext = vscode.extensions.getExtension('iamshreydxv.gitingest');
+        assert.ok(ext);
+        await ext.activate();
         const commands = await vscode.commands.getCommands();
         const gitingestCommands = [
             'vscode-gitingest.analyze',
             'vscode-gitingest.analyzeFolder',
             'vscode-gitingest.addToIngest',
+            'vscode-gitingest.reIngest',
         ];
         for (const cmd of gitingestCommands) {
             assert.ok(commands.includes(cmd), `Command ${cmd} should be registered`);

@@ -4,12 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [0.4.2] - .gitingestignore & settings support
+## [0.5.0] - .gitingestignore & Re-Ingest
 
 Added
 
-- **.gitingestignore** support: same format as `.gitignore`; the gitingest engine respects both `.gitignore` and `.gitingestignore` when building the digest.
-- **Settings support** for exclusions: new setting `gitingest.fileExclusions` (glob patterns, defaults: `**/node_modules`, `**/.git`) so you can exclude more paths from ingestion; applied in addition to ignore files.
+- **.gitingestignore** support: same format as `.gitignore`; the gitingest engine respects both `.gitignore` and `.gitingestignore` when building the digest. Exclude files from ingestion without adding them to `.gitignore`.
+- **Settings support** for exclusions: setting `gitingest.fileExclusions` (glob patterns, defaults: `**/node_modules`, `**/.git`) to exclude more paths from ingestion; applied in addition to ignore files.
+- **Re-Ingest:** Re-run ingest on the same folder without reselecting. Use the **Re-Ingest** button in the results panel after viewing a digest, or run **GitIngest: Re-Ingest Last Folder** from the Command Palette. Useful after making changes when you don't want to go through the selection process again.
 
 Changed
 
@@ -19,6 +20,7 @@ Changed
 Fixed
 
 - Resolved 3 high-severity npm audit issues in dev dependencies (serialize-javascript) via override; tests unchanged.
+- VSIX no longer ships test-only config (`tsconfig.*.json` excluded) for a smaller package.
 
 ---
 

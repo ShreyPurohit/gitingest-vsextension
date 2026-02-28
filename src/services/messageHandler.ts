@@ -27,6 +27,9 @@ export async function handleWebviewMessage(
             case 'retry':
                 await handleAnalyzeCommand(panel);
                 break;
+            case 'reIngest':
+                await handleReIngestCommand(panel, message);
+                break;
         }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
@@ -60,6 +63,34 @@ async function handleCopyCommand(text?: string): Promise<void> {
     if (text) {
         await vscode.env.clipboard.writeText(text);
         vscode.window.showInformationMessage('Analysis output copied to clipboard!');
+    }
+}
+
+async function handleReIngestCommand(
+    panel: vscode.WebviewPanel,
+    message: WebviewMessage,
+): Promise<void> {
+    const pathTrimmed = typeof message.path === 'string' ? message.path.trim() : '';
+    if (!pathTrimmed) {
+        WebviewService.showError(panel, 'Re-Ingest Failed', [
+            'No folder path provided. Close and run Analyze or Analyze This Folder again.',
+        ]);
+        return;
+    }
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(pathTrimmed));
+    if (!workspaceFolder) {
+        WebviewService.showError(panel, 'Re-Ingest Failed', [
+            'Folder is not in the workspace or no longer exists.',
+        ]);
+        return;
+    }
+    await processManager.killCurrentProcess();
+    try {
+        await AnalysisService.verifyDependencies(panel);
+        await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...');
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);
     }
 }
 

@@ -14,6 +14,7 @@ export const COMMANDS = {
     analyze: 'vscode-gitingest.analyze',
     analyzeFolder: 'vscode-gitingest.analyzeFolder',
     addToIngest: 'vscode-gitingest.addToIngest',
+    reIngest: 'vscode-gitingest.reIngest',
 } as const;
 
 export const WEBVIEW_OPTIONS = {
