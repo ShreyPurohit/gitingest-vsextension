@@ -14,6 +14,7 @@ export const COMMANDS = {
     analyze: 'vscode-gitingest.analyze',
     analyzeFolder: 'vscode-gitingest.analyzeFolder',
     addToIngest: 'vscode-gitingest.addToIngest',
+    reIngest: 'vscode-gitingest.reIngest',
 } as const;
 
 export const WEBVIEW_OPTIONS = {
@@ -34,6 +35,4 @@ export const ERROR_MESSAGES = {
     VENV_CREATION_FAILED:
         'Failed to create virtual environment. The extension will try to install packages in user site-packages.',
     PERMISSION_ERROR: 'Permission denied. The extension will try to install in user site-packages.',
-    VENV_PERMISSION_ERROR:
-        'Permission denied while creating virtual environment. The extension will try to create it in the user home directory instead.',
 } as const;

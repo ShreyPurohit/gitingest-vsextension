@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WEBVIEW_OPTIONS } from '../config';
-import { StatusMessage } from '../types';
+import { AnalysisResultData, StatusMessage } from '../types';
 import { handleWebviewMessage } from './messageHandler';
 import { getErrorContent, getLoadingContent, getResultsContent } from '../webview';
 
@@ -33,7 +33,11 @@ export class WebviewService {
         panel.webview.html = getErrorContent(title, errors);
     }
 
-    public static showResults(panel: vscode.WebviewPanel, data: any): void {
-        panel.webview.html = getResultsContent(data);
+    public static showResults(
+        panel: vscode.WebviewPanel,
+        data: AnalysisResultData,
+        ingestedPath?: string,
+    ): void {
+        panel.webview.html = getResultsContent(data, ingestedPath);
     }
 }

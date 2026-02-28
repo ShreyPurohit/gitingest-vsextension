@@ -7,17 +7,19 @@ import { processManager } from './utils/processManager';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     AnalysisService.setScriptPath(context);
+    AnalysisService.setContext(context);
 
-    const commands = registerCommands();
+    const commands = registerCommands(context);
 
     context.subscriptions.push(...commands);
 }
 
-function registerCommands(): vscode.Disposable[] {
+function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
     return [
         vscode.commands.registerCommand(COMMANDS.analyze, handleAnalyze),
         vscode.commands.registerCommand(COMMANDS.analyzeFolder, handleAnalyzeFolder),
         vscode.commands.registerCommand(COMMANDS.addToIngest, handleAddToIngest),
+        vscode.commands.registerCommand(COMMANDS.reIngest, () => handleReIngest(context)),
     ];
 }
 
@@ -83,5 +85,35 @@ async function handleAddToIngest(resourceUri: vscode.Uri): Promise<void> {
         const message =
             error instanceof Error ? error.message : 'Failed to add the selected item to ingest.';
         vscode.window.showErrorMessage(message);
+    }
+}
+
+async function handleReIngest(context: vscode.ExtensionContext): Promise<void> {
+    const lastPath = context.workspaceState.get<string>('gitingest.lastIngestedPath');
+    if (!lastPath || typeof lastPath !== 'string' || lastPath.trim() === '') {
+        vscode.window.showInformationMessage(
+            "No previous folder to re-ingest. Use 'Analyze' or 'Analyze This Folder' first.",
+        );
+        return;
+    }
+    const pathTrimmed = lastPath.trim();
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(pathTrimmed));
+    if (!workspaceFolder) {
+        context.workspaceState.update('gitingest.lastIngestedPath', undefined);
+        vscode.window.showWarningMessage(
+            'Last ingested folder is no longer in the workspace or no longer exists.',
+        );
+        return;
+    }
+    const panel = WebviewService.createAnalysisPanel('GitIngest: Re-Ingest');
+    panel.onDidDispose(() => {
+        processManager.killCurrentProcess().catch(console.error);
+    });
+    try {
+        await AnalysisService.verifyDependencies(panel);
+        await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...');
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);
     }
 }

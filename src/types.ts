@@ -1,7 +1,8 @@
 // Message types
 export interface WebviewMessage {
-    command: 'analyze' | 'cancel' | 'copy' | 'saveToFile' | 'retry';
+    command: 'analyze' | 'cancel' | 'copy' | 'saveToFile' | 'retry' | 'reIngest';
     text?: string;
+    path?: string;
     data?: {
         summary: string;
         tree: string;
@@ -25,13 +26,16 @@ export interface StatusMessage {
     type: 'info' | 'success' | 'error' | 'warning';
 }
 
+/** Shape of the data payload shown in the results webview and saved to file. */
+export interface AnalysisResultData {
+    summary: string;
+    tree: string;
+    content: string;
+}
+
 export interface AnalysisResult {
     type: 'success' | 'error';
-    data?: {
-        summary: string;
-        tree: string;
-        content: string;
-    };
+    data?: AnalysisResultData;
     message?: string;
 }
 

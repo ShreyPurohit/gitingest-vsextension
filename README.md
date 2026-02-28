@@ -249,10 +249,15 @@ GitIngest handles these automatically:
 
 Access via **File > Preferences > Settings > Extensions > GitIngest**:
 
-- **File Exclusions** - Add custom patterns to ignore
-- **Analysis Depth** - Control analysis scope
-- **Auto Cleanup** - Enable/disable automatic staging cleanup
-- **UI Preferences** - Customize panel layouts
+- **Ingest Folder Name** – Folder name used to stage files when using "Add to Ingest" (default: `gitingest-ingest`).
+- **Delete After Ingest** – When enabled, the staging folder is removed after a successful analysis.
+- **File Exclusions** – Glob patterns to exclude from ingestion (e.g. `**/node_modules`, `**/*.min.js`). Applied in addition to `.gitignore` and `.gitingestignore`.
+
+### .gitingestignore
+
+You can add a **`.gitingestignore`** file in the root of the folder you are analyzing. It uses the same format as `.gitignore`. Files and folders listed there are excluded from ingestion but remain in version control, so you don't need to add them to `.gitignore` just to keep them out of the digest.
+
+The engine respects both `.gitignore` and `.gitingestignore` by default. A recent version of the gitingest Python package (e.g. 0.3.x) is required for `.gitingestignore` support.
 
 ---
 
@@ -357,12 +362,12 @@ Your privacy and security are our top priorities:
 
 ## Contributing
 
-### Ways to Help
+GitIngest is open source and we welcome contributions.
 
-- 🌟 **Star the repository** - Help others discover GitIngest
-- 🐛 **Report bugs** - Help me improve the extension
-- 💡 **Suggest features** - Share your ideas for new functionality
-- 💡 **Connect with me** - [GitHub](https://github.com/ShreyPurohit/)
+- 🌟 **Star the repository** – Help others discover GitIngest
+- 🐛 **Report bugs** – [Open an issue](https://github.com/ShreyPurohit/gitingest-vsextension/issues)
+- 💡 **Suggest features** – Share ideas via [GitHub Discussions](https://github.com/ShreyPurohit/gitingest-vsextension/discussions) or issues
+- 🔧 **Contribute code** – See **[CONTRIBUTING.md](CONTRIBUTING.md)** for development setup, code style, and how to submit pull requests
 
 ---
 

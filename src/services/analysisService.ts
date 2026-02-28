@@ -6,12 +6,19 @@ import { PythonHandler } from '../utils/pythonHandler';
 import { WebviewService } from './webviewService';
 import { WorkspaceService } from './workspaceService';
 
+const LAST_INGESTED_PATH_KEY = 'gitingest.lastIngestedPath';
+
 export class AnalysisService {
     private static pythonHandler = PythonHandler.getInstance();
     private static scriptPath: string;
+    private static extensionContext: vscode.ExtensionContext | undefined;
 
     public static setScriptPath(context: vscode.ExtensionContext): void {
         this.scriptPath = context.asAbsolutePath(path.join('src', 'gitingest-script.py'));
+    }
+
+    public static setContext(context: vscode.ExtensionContext): void {
+        this.extensionContext = context;
     }
 
     public static async verifyDependencies(panel: vscode.WebviewPanel): Promise<void> {
@@ -53,7 +60,10 @@ export class AnalysisService {
         }
 
         if (result.data) {
-            WebviewService.showResults(panel, result.data);
+            WebviewService.showResults(panel, result.data, targetPath);
+            if (this.extensionContext) {
+                this.extensionContext.workspaceState.update(LAST_INGESTED_PATH_KEY, targetPath);
+            }
             // After successfully showing results, attempt to clean up staged ingest folder
             try {
                 const workspaceRoot = WorkspaceService.getWorkspaceFolder();
@@ -70,8 +80,29 @@ export class AnalysisService {
     }
 
     public static async getOutput(repoPath: string): Promise<AnalysisResult> {
+        const pathTrimmed = typeof repoPath === 'string' ? repoPath.trim() : '';
+        if (!pathTrimmed) {
+            return {
+                type: 'error',
+                message: 'Invalid or missing repository path.',
+            };
+        }
         try {
-            const output = await this.pythonHandler.executeScript(this.scriptPath, [repoPath]);
+            const resource =
+                vscode.workspace.getWorkspaceFolder(vscode.Uri.file(pathTrimmed))?.uri ??
+                WorkspaceService.getWorkspaceFolder()?.uri;
+            const fileExclusions =
+                (resource
+                    ? vscode.workspace
+                          .getConfiguration('gitingest', resource)
+                          .get<string[]>('fileExclusions', [])
+                    : []) ?? [];
+            const patterns = fileExclusions.filter(
+                (p): p is string => typeof p === 'string' && p.trim() !== '',
+            );
+            const args =
+                patterns.length > 0 ? [pathTrimmed, JSON.stringify(patterns)] : [pathTrimmed];
+            const output = await this.pythonHandler.executeScriptWithProcess(this.scriptPath, args);
             return {
                 type: 'success',
                 data: JSON.parse(output),
