@@ -6,4 +6,6 @@ export default defineConfig({
         ui: 'bdd',
         timeout: 10000,
     },
+    // Reduce D-Bus/GPU noise and improve stability in headless CI (e.g. GitHub Actions)
+    launchArgs: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
 });
