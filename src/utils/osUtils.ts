@@ -37,12 +37,6 @@ export class OsUtils {
         return path.join(venvPath, binFolder, pythonExe);
     }
 
-    static getVenvPipPath(venvPath: string): string {
-        const binFolder = this.isWindows() ? 'Scripts' : 'bin';
-        const pipExe = this.isWindows() ? 'pip.exe' : 'pip';
-        return path.join(venvPath, binFolder, pipExe);
-    }
-
     static async killProcess(pid: number): Promise<void> {
         if (this.isWindows()) {
             await execAsync(`taskkill /pid ${pid} /T /F`);

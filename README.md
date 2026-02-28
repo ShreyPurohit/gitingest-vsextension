@@ -249,10 +249,15 @@ GitIngest handles these automatically:
 
 Access via **File > Preferences > Settings > Extensions > GitIngest**:
 
-- **File Exclusions** - Add custom patterns to ignore
-- **Analysis Depth** - Control analysis scope
-- **Auto Cleanup** - Enable/disable automatic staging cleanup
-- **UI Preferences** - Customize panel layouts
+- **Ingest Folder Name** – Folder name used to stage files when using "Add to Ingest" (default: `gitingest-ingest`).
+- **Delete After Ingest** – When enabled, the staging folder is removed after a successful analysis.
+- **File Exclusions** – Glob patterns to exclude from ingestion (e.g. `**/node_modules`, `**/*.min.js`). Applied in addition to `.gitignore` and `.gitingestignore`.
+
+### .gitingestignore
+
+You can add a **`.gitingestignore`** file in the root of the folder you are analyzing. It uses the same format as `.gitignore`. Files and folders listed there are excluded from ingestion but remain in version control, so you don't need to add them to `.gitignore` just to keep them out of the digest.
+
+The engine respects both `.gitignore` and `.gitingestignore` by default. A recent version of the gitingest Python package (e.g. 0.3.x) is required for `.gitingestignore` support.
 
 ---
 

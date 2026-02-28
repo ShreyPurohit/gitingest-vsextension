@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.4.2] - .gitingestignore & settings support
+
+Added
+
+- **.gitingestignore** support: same format as `.gitignore`; the gitingest engine respects both `.gitignore` and `.gitingestignore` when building the digest.
+- **Settings support** for exclusions: new setting `gitingest.fileExclusions` (glob patterns, defaults: `**/node_modules`, `**/.git`) so you can exclude more paths from ingestion; applied in addition to ignore files.
+
+Changed
+
+- **Handler:** Cancel / closing the panel now properly stops the running ingest process; script runs with the repo root as working directory; shared command/args logic and clearer error handling in the Python handler.
+- **Services:** Analysis service validates the repo path and reads workspace file-exclusion settings before running; webview and result types tightened up; removed unused config and helpers.
+
+Fixed
+
+- Resolved 3 high-severity npm audit issues in dev dependencies (serialize-javascript) via override; tests unchanged.
+
+---
+
 ## [0.4.1] - Add to Ingest
 
 Fixed

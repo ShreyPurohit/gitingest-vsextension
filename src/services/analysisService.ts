@@ -70,8 +70,29 @@ export class AnalysisService {
     }
 
     public static async getOutput(repoPath: string): Promise<AnalysisResult> {
+        const pathTrimmed = typeof repoPath === 'string' ? repoPath.trim() : '';
+        if (!pathTrimmed) {
+            return {
+                type: 'error',
+                message: 'Invalid or missing repository path.',
+            };
+        }
         try {
-            const output = await this.pythonHandler.executeScript(this.scriptPath, [repoPath]);
+            const resource =
+                vscode.workspace.getWorkspaceFolder(vscode.Uri.file(pathTrimmed))?.uri ??
+                WorkspaceService.getWorkspaceFolder()?.uri;
+            const fileExclusions =
+                (resource
+                    ? vscode.workspace
+                          .getConfiguration('gitingest', resource)
+                          .get<string[]>('fileExclusions', [])
+                    : []) ?? [];
+            const patterns = fileExclusions.filter(
+                (p): p is string => typeof p === 'string' && p.trim() !== '',
+            );
+            const args =
+                patterns.length > 0 ? [pathTrimmed, JSON.stringify(patterns)] : [pathTrimmed];
+            const output = await this.pythonHandler.executeScriptWithProcess(this.scriptPath, args);
             return {
                 type: 'success',
                 data: JSON.parse(output),

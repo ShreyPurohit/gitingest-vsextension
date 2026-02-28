@@ -1,14 +1,25 @@
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
 import { ERROR_MESSAGES } from '../config';
+import { processManager } from './processManager';
 import { OsUtils } from './osUtils';
 
 type RunResult = { stdout: string; stderr: string; code: number };
 
-async function runCommand(cmd: string, args: string[], cwd?: string): Promise<RunResult> {
+interface RunError extends Error {
+    code?: number;
+}
+
+function runCommand(
+    cmd: string,
+    args: string[],
+    cwd?: string,
+    onSpawn?: (child: ChildProcess) => void,
+): Promise<RunResult> {
     return new Promise((resolve, reject) => {
         const child = spawn(cmd, args, { cwd, shell: false });
+        onSpawn?.(child);
         let stdout = '';
         let stderr = '';
 
@@ -23,10 +34,10 @@ async function runCommand(cmd: string, args: string[], cwd?: string): Promise<Ru
             if (code === 0) {
                 resolve({ stdout, stderr, code: code ?? 0 });
             } else {
-                const error = new Error(
+                const error: RunError = new Error(
                     stderr || stdout || `Command failed: ${cmd} ${args.join(' ')}`,
                 );
-                (error as any).code = code;
+                error.code = code ?? undefined;
                 reject(error);
             }
         });
@@ -64,7 +75,7 @@ export class PythonHandler {
             return { cmd, args };
         });
         try {
-            return await (Promise as any).any(attempts);
+            return await Promise.any(attempts);
         } catch {
             throw new Error(ERROR_MESSAGES.PYTHON_NOT_INSTALLED);
         }
@@ -138,8 +149,8 @@ export class PythonHandler {
             }
             await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'virtualenv', targetPath]);
             return true;
-        } catch (error: any) {
-            const msg = (error?.message || '').toLowerCase();
+        } catch (error: unknown) {
+            const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
             if (msg.includes('permission denied')) {
                 throw new Error(ERROR_MESSAGES.PERMISSION_ERROR);
             }
@@ -147,56 +158,41 @@ export class PythonHandler {
         }
     }
 
+    private async createVenvAndReturnPath(projectPath: string): Promise<string> {
+        const projectVenvPath = path.join(projectPath, '.venv');
+        const homeVenvPath = path.join(os.homedir(), '.gitingest-venv');
+        try {
+            await this.tryCreateVenvInPath(projectVenvPath);
+            return projectVenvPath;
+        } catch (error) {
+            if (error instanceof Error && error.message === ERROR_MESSAGES.PERMISSION_ERROR) {
+                console.log('Failed to create venv in project directory, trying home directory...');
+                try {
+                    await this.tryCreateVenvInPath(homeVenvPath);
+                    return homeVenvPath;
+                } catch {
+                    throw new Error(ERROR_MESSAGES.VENV_CREATION_FAILED);
+                }
+            }
+            throw error;
+        }
+    }
+
     private async createVirtualEnv(projectPath: string): Promise<void> {
         try {
-            // First try installing in user site-packages
             await this.installGitIngestUserSite();
             return;
-        } catch (error) {
-            // If user site-packages installation fails, try venv approach
+        } catch {
             console.log('User site-packages installation failed, trying venv...');
-
-            // First try in project directory
-            const projectVenvPath = path.join(projectPath, '.venv');
-
-            // Then try in user's home directory if project directory fails
-            const homeVenvPath = path.join(os.homedir(), '.gitingest-venv');
-
-            let venvCreated = false;
-            let finalVenvPath = '';
-
-            try {
-                await this.tryCreateVenvInPath(projectVenvPath);
-                venvCreated = true;
-                finalVenvPath = projectVenvPath;
-            } catch (error) {
-                if (error instanceof Error && error.message === ERROR_MESSAGES.PERMISSION_ERROR) {
-                    console.log(
-                        'Failed to create venv in project directory, trying home directory...',
-                    );
-                    try {
-                        await this.tryCreateVenvInPath(homeVenvPath);
-                        venvCreated = true;
-                        finalVenvPath = homeVenvPath;
-                    } catch (homeError) {
-                        throw new Error(ERROR_MESSAGES.VENV_CREATION_FAILED);
-                    }
-                } else {
-                    throw error;
-                }
-            }
-
-            if (venvCreated) {
-                this.venvPath = finalVenvPath;
-                this.venvPython = OsUtils.getVenvPythonPath(this.venvPath);
-
-                try {
-                    await runCommand(this.venvPython, ['-m', 'pip', 'install', '--upgrade', 'pip']);
-                    await runCommand(this.venvPython, ['-m', 'pip', 'install', 'gitingest']);
-                } catch (error) {
-                    throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
-                }
-            }
+        }
+        const venvPath = await this.createVenvAndReturnPath(projectPath);
+        this.venvPath = venvPath;
+        this.venvPython = OsUtils.getVenvPythonPath(this.venvPath);
+        try {
+            await runCommand(this.venvPython, ['-m', 'pip', 'install', '--upgrade', 'pip']);
+            await runCommand(this.venvPython, ['-m', 'pip', 'install', 'gitingest']);
+        } catch {
+            throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
         }
     }
 
@@ -222,26 +218,49 @@ export class PythonHandler {
         }
     }
 
+    private async getScriptCommandAndArgs(): Promise<{ cmd: string; baseArgs: string[] }> {
+        if (this.userSitePackages) {
+            if (!this.pythonCmd) {
+                const found = await this.findPythonCommand();
+                this.pythonCmd = found.cmd;
+                this.pythonArgs = found.args;
+            }
+            return { cmd: this.pythonCmd, baseArgs: [...this.pythonArgs] };
+        }
+        return { cmd: this.venvPython, baseArgs: [] };
+    }
+
     public async executeScript(scriptPath: string, args: string[]): Promise<string> {
         try {
-            let cmd: string;
-            let baseArgs: string[] = [];
-            if (this.userSitePackages) {
-                if (!this.pythonCmd) {
-                    const found = await this.findPythonCommand();
-                    this.pythonCmd = found.cmd;
-                    this.pythonArgs = found.args;
-                }
-                cmd = this.pythonCmd;
-                baseArgs = [...this.pythonArgs];
-            } else {
-                cmd = this.venvPython;
-            }
+            const { cmd, baseArgs } = await this.getScriptCommandAndArgs();
             const res = await runCommand(cmd, [...baseArgs, scriptPath, ...args]);
             return res.stdout;
         } catch (error) {
             console.error('Script execution failed:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Runs the script and registers the child process with processManager so it can be killed on Cancel.
+     * Clears the process when the promise settles (success or failure).
+     * Sets cwd to args[0] (repo path) when valid, so the engine runs with project root as cwd on all OS.
+     */
+    public async executeScriptWithProcess(scriptPath: string, args: string[]): Promise<string> {
+        const { cmd, baseArgs } = await this.getScriptCommandAndArgs();
+        const fullArgs = [...baseArgs, scriptPath, ...args];
+        const repoPath = args[0];
+        const cwd =
+            typeof repoPath === 'string' && repoPath.trim().length > 0
+                ? repoPath.trim()
+                : undefined;
+        try {
+            const res = await runCommand(cmd, fullArgs, cwd, (child) =>
+                processManager.setProcess(child),
+            );
+            return res.stdout;
+        } finally {
+            processManager.clear();
         }
     }
 
