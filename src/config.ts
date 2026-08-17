@@ -19,7 +19,7 @@ export const COMMANDS = {
 
 export const WEBVIEW_OPTIONS = {
     enableScripts: true,
-    retainContextWhenHidden: false,
+    retainContextWhenHidden: true,
 } as const;
 
 export const ERROR_MESSAGES = {

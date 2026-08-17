@@ -90,5 +90,5 @@ export function getResultsContent(
 // Utils
 
 function createHtmlDocument(content: string, styles: string): string {
-    return `<!DOCTYPE html><html><head><style>${styles}</style><script>const vscode = acquireVsCodeApi();</script></head><body>${content}</body></html>`;
+    return `<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';"><style>${styles}</style><script>const vscode = acquireVsCodeApi();</script></head><body>${content}</body></html>`;
 }

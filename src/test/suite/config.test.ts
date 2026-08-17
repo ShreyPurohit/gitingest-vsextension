@@ -30,7 +30,7 @@ describe('config', () => {
         assert.strictEqual(WEBVIEW_OPTIONS.enableScripts, true);
     });
 
-    it('WEBVIEW_OPTIONS.retainContextWhenHidden is false', () => {
-        assert.strictEqual(WEBVIEW_OPTIONS.retainContextWhenHidden, false);
+    it('WEBVIEW_OPTIONS.retainContextWhenHidden is true', () => {
+        assert.strictEqual(WEBVIEW_OPTIONS.retainContextWhenHidden, true);
     });
 });
