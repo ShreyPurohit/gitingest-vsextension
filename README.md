@@ -1,7 +1,7 @@
 <div align="center">
 
   <img src="./assets/Gitingest_Banner.png" alt="GitIngest Extension Banner" style="border: 4px solid rgba(255, 255, 255, 0.9); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-  
+
 _Deep insights, modern UI, and effortless integration into your workflow._
 
 [![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)

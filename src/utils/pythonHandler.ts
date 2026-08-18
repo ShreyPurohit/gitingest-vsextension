@@ -44,13 +44,20 @@ function runCommand(
     });
 }
 
+/**
+ * Fixed path for the gitingest virtual environment.
+ * Located in the user's home directory so it is shared across all projects
+ * and never pollutes any workspace. Works on all OS via os.homedir().
+ */
+const GITINGEST_VENV_PATH = path.join(os.homedir(), '.gitingest-venv');
+
 export class PythonHandler {
     private static instance: PythonHandler;
     private pythonCmd: string = '';
     private pythonArgs: string[] = [];
-    private venvPath: string = '';
     private venvPython: string = '';
     private userSitePackages: boolean = false;
+    private gitIngestVerified: boolean = false;
 
     private constructor() {}
 
@@ -81,38 +88,60 @@ export class PythonHandler {
         }
     }
 
-    private async checkVenvModule(pythonCmd: string, pythonArgs: string[]): Promise<boolean> {
+    private async isGitIngestInstalled(cmd: string, args: string[]): Promise<boolean> {
         try {
-            await runCommand(pythonCmd, [...pythonArgs, '-c', 'import venv']);
+            await runCommand(cmd, [...args, '-c', 'import gitingest']);
             return true;
         } catch {
             return false;
         }
     }
 
-    private async ensureVirtualenvInstalled(
-        pythonCmd: string,
-        pythonArgs: string[],
-    ): Promise<void> {
-        await runCommand(pythonCmd, [
-            ...pythonArgs,
+    private async createVenvAtPath(targetPath: string): Promise<void> {
+        // Try built-in venv module first
+        try {
+            await runCommand(this.pythonCmd, [...this.pythonArgs, '-c', 'import venv']);
+            await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'venv', targetPath]);
+            return;
+        } catch {
+            // venv module unavailable; try virtualenv
+        }
+
+        // Install and use virtualenv as fallback
+        await runCommand(this.pythonCmd, [
+            ...this.pythonArgs,
             '-m',
             'pip',
             'install',
             '--user',
             'virtualenv',
         ]);
+        await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'virtualenv', targetPath]);
     }
 
-    private async installGitIngestUserSite(): Promise<void> {
-        try {
-            if (!this.pythonCmd) {
-                const found = await this.findPythonCommand();
-                this.pythonCmd = found.cmd;
-                this.pythonArgs = found.args;
-            }
+    /**
+     * Ensures gitingest is available. Strategy (in order):
+     * 1. Check if gitingest is already importable from system/user Python
+     * 2. Check if ~/.gitingest-venv already has gitingest
+     * 3. Try pip install --user (works on some systems)
+     * 4. Create ~/.gitingest-venv and install gitingest there
+     */
+    private async ensureGitIngest(): Promise<void> {
+        // 1. Already available in system/user Python?
+        if (await this.isGitIngestInstalled(this.pythonCmd, this.pythonArgs)) {
+            this.userSitePackages = true;
+            return;
+        }
 
-            // Install gitingest in user's site-packages
+        // 2. Already available in the shared venv?
+        const venvPython = OsUtils.getVenvPythonPath(GITINGEST_VENV_PATH);
+        if (await this.isGitIngestInstalled(venvPython, [])) {
+            this.venvPython = venvPython;
+            return;
+        }
+
+        // 3. Try user site-packages installation (may fail on externally-managed Python)
+        try {
             await runCommand(this.pythonCmd, [
                 ...this.pythonArgs,
                 '-m',
@@ -122,151 +151,91 @@ export class PythonHandler {
                 'gitingest',
             ]);
             this.userSitePackages = true;
-        } catch (error) {
-            throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
-        }
-    }
-
-    private async tryCreateVenvInPath(targetPath: string): Promise<boolean> {
-        try {
-            if (!this.pythonCmd) {
-                const found = await this.findPythonCommand();
-                this.pythonCmd = found.cmd;
-                this.pythonArgs = found.args;
-            }
-
-            const hasVenv = await this.checkVenvModule(this.pythonCmd, this.pythonArgs);
-            if (hasVenv) {
-                await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'venv', targetPath]);
-                return true;
-            }
-
-            // Fallback to virtualenv if built-in venv is unavailable
-            try {
-                await this.ensureVirtualenvInstalled(this.pythonCmd, this.pythonArgs);
-            } catch {
-                throw new Error(ERROR_MESSAGES.VENV_NOT_INSTALLED);
-            }
-            await runCommand(this.pythonCmd, [...this.pythonArgs, '-m', 'virtualenv', targetPath]);
-            return true;
-        } catch (error: unknown) {
-            const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
-            if (msg.includes('permission denied')) {
-                throw new Error(ERROR_MESSAGES.PERMISSION_ERROR);
-            }
-            throw error;
-        }
-    }
-
-    private async createVenvAndReturnPath(projectPath: string): Promise<string> {
-        const projectVenvPath = path.join(projectPath, '.venv');
-        const homeVenvPath = path.join(os.homedir(), '.gitingest-venv');
-        try {
-            await this.tryCreateVenvInPath(projectVenvPath);
-            return projectVenvPath;
-        } catch (error) {
-            if (error instanceof Error && error.message === ERROR_MESSAGES.PERMISSION_ERROR) {
-                console.log('Failed to create venv in project directory, trying home directory...');
-                try {
-                    await this.tryCreateVenvInPath(homeVenvPath);
-                    return homeVenvPath;
-                } catch {
-                    throw new Error(ERROR_MESSAGES.VENV_CREATION_FAILED);
-                }
-            }
-            throw error;
-        }
-    }
-
-    private async createVirtualEnv(projectPath: string): Promise<void> {
-        try {
-            await this.installGitIngestUserSite();
             return;
         } catch {
-            console.log('User site-packages installation failed, trying venv...');
+            // Expected on PEP 668 externally-managed Python; fall through
         }
-        const venvPath = await this.createVenvAndReturnPath(projectPath);
-        this.venvPath = venvPath;
-        this.venvPython = OsUtils.getVenvPythonPath(this.venvPath);
+
+        // 4. Create shared venv in home directory and install gitingest
         try {
+            await this.createVenvAtPath(GITINGEST_VENV_PATH);
+            this.venvPython = OsUtils.getVenvPythonPath(GITINGEST_VENV_PATH);
             await runCommand(this.venvPython, ['-m', 'pip', 'install', '--upgrade', 'pip']);
             await runCommand(this.venvPython, ['-m', 'pip', 'install', 'gitingest']);
         } catch {
-            throw new Error(ERROR_MESSAGES.GITINGEST_NOT_INSTALLED);
+            throw new Error(
+                'Failed to install GitIngest. Please ensure you have internet connectivity and Python 3 with venv support, then try again.',
+            );
         }
     }
 
     public async verifyPythonInstallation(): Promise<boolean> {
-        try {
-            const found = await this.findPythonCommand();
-            this.pythonCmd = found.cmd;
-            this.pythonArgs = found.args;
-            return true;
-        } catch (error) {
-            console.error('Python verification failed:', error);
-            throw error;
-        }
+        const found = await this.findPythonCommand();
+        this.pythonCmd = found.cmd;
+        this.pythonArgs = found.args;
+        return true;
     }
 
-    public async verifyGitIngest(projectPath: string): Promise<boolean> {
-        try {
-            await this.createVirtualEnv(projectPath);
+    public async verifyGitIngest(): Promise<boolean> {
+        if (this.gitIngestVerified) {
             return true;
-        } catch (error) {
-            console.error('GitIngest verification failed:', error);
-            throw error;
         }
+        await this.ensureGitIngest();
+        this.gitIngestVerified = true;
+        return true;
     }
 
-    private async getScriptCommandAndArgs(): Promise<{ cmd: string; baseArgs: string[] }> {
+    private getScriptCommandAndArgs(): { cmd: string; baseArgs: string[] } {
         if (this.userSitePackages) {
-            if (!this.pythonCmd) {
-                const found = await this.findPythonCommand();
-                this.pythonCmd = found.cmd;
-                this.pythonArgs = found.args;
-            }
             return { cmd: this.pythonCmd, baseArgs: [...this.pythonArgs] };
         }
         return { cmd: this.venvPython, baseArgs: [] };
-    }
-
-    public async executeScript(scriptPath: string, args: string[]): Promise<string> {
-        try {
-            const { cmd, baseArgs } = await this.getScriptCommandAndArgs();
-            const res = await runCommand(cmd, [...baseArgs, scriptPath, ...args]);
-            return res.stdout;
-        } catch (error) {
-            console.error('Script execution failed:', error);
-            throw error;
-        }
     }
 
     /**
      * Runs the script and registers the child process with processManager so it can be killed on Cancel.
      * Clears the process when the promise settles (success or failure).
      * Sets cwd to args[0] (repo path) when valid, so the engine runs with project root as cwd on all OS.
+     * If the configured Python binary is missing (e.g. venv deleted), automatically re-verifies and retries once.
      */
     public async executeScriptWithProcess(scriptPath: string, args: string[]): Promise<string> {
-        const { cmd, baseArgs } = await this.getScriptCommandAndArgs();
-        const fullArgs = [...baseArgs, scriptPath, ...args];
         const repoPath = args[0];
         const cwd =
             typeof repoPath === 'string' && repoPath.trim().length > 0
                 ? repoPath.trim()
                 : undefined;
+
         try {
+            const { cmd, baseArgs } = this.getScriptCommandAndArgs();
+            const fullArgs = [...baseArgs, scriptPath, ...args];
             const res = await runCommand(cmd, fullArgs, cwd, (child) =>
                 processManager.setProcess(child),
             );
             return res.stdout;
+        } catch (error) {
+            // If the Python binary was removed (venv deleted), reset and re-setup
+            const msg = error instanceof Error ? error.message : '';
+            if (msg.includes('ENOENT') || msg.includes('missing')) {
+                this.resetState();
+                await this.ensureGitIngest();
+                this.gitIngestVerified = true;
+
+                const { cmd, baseArgs } = this.getScriptCommandAndArgs();
+                const fullArgs = [...baseArgs, scriptPath, ...args];
+                const res = await runCommand(cmd, fullArgs, cwd, (child) =>
+                    processManager.setProcess(child),
+                );
+                return res.stdout;
+            }
+            throw error;
         } finally {
             processManager.clear();
         }
     }
 
-    public setPythonCommand(command: string): void {
-        // Backwards-compat: allow setting a direct command string
-        this.pythonCmd = command;
-        this.pythonArgs = [];
+    private resetState(): void {
+        this.venvPython = '';
+        this.userSitePackages = false;
+        this.gitIngestVerified = false;
     }
 }

@@ -16,7 +16,10 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 assets/*
 !assets/gitingest-icon.png
-.venv/*
-.github/*
+.venv/**
+.github/**
 .env
 .prettierignore
+.prettierrc.json
+CONTRIBUTING.md
+package-lock.json

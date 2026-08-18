@@ -40,9 +40,13 @@ function getStatusIcon(type: string): string {
 
 // Components
 
-function Button({ onClick, variant = 'primary', icon, children }: ButtonProps): string {
+function Button({ onClick, variant = 'primary', icon, children, attrs = {} }: ButtonProps): string {
     const variantClasses = { primary: 'primary-button', danger: 'danger-button' };
-    return `<button class="button ${variantClasses[variant]}" onclick="${onClick}">${icon ? `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>` : ''}${children}</button>`;
+    const attrString = Object.entries(attrs)
+        .map(([key, value]) => `${key}="${value}"`)
+        .join(' ');
+    const attrPrefix = attrString ? ` ${attrString}` : '';
+    return `<button class="button ${variantClasses[variant]}" onclick="${onClick}"${attrPrefix}>${icon ? `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>` : ''}${children}</button>`;
 }
 
 function Section({ title, content, copyButton = true, copyFunction }: SectionProps): string {
@@ -77,18 +81,20 @@ export function getResultsContent(
 ): string {
     const ingestedPathTrimmed = ingestedPath?.trim() ?? '';
     const reIngestButton = ingestedPathTrimmed
-        ? Button({ onClick: 'reIngest()', icon: icons.retry, children: 'Re-Ingest' })
-        : '';
-    const pathScript = ingestedPathTrimmed
-        ? `const lastIngestedPath=${JSON.stringify(ingestedPathTrimmed)};function reIngest(){if(lastIngestedPath)vscode.postMessage({command:'reIngest',path:lastIngestedPath})}`
+        ? Button({
+              onClick: 'reIngest()',
+              icon: icons.retry,
+              children: 'Re-Ingest',
+              attrs: { 'data-path': escapeHtml(ingestedPathTrimmed) },
+          })
         : '';
     const buttonGroup = `<div class="button-group">${Button({ onClick: 'copyAll()', icon: icons.copy, children: 'Copy All' })}${Button({ onClick: 'saveToFile()', icon: icons.save, children: 'Save to File' })}${reIngestButton}</div>`;
-    const content = `<div class="shadow-wrapper"><div class="content-wrapper"><div class="grid"><div>${Section({ title: 'Summary', content: escapeHtml(data.summary), copyFunction: 'copySummary()' })}${buttonGroup}</div>${Section({ title: 'Directory Structure', content: escapeHtml(data.tree), copyFunction: 'copyTree()' })}</div>${Section({ title: 'Files Content', content: escapeHtml(data.content), copyFunction: 'copyContent()' })}</div></div><script>function copySummary(){const summary=document.querySelectorAll('.scrollable-content pre')[0].innerText;vscode.postMessage({command:'copy',text:summary})}function copyTree(){const tree=document.querySelectorAll('.scrollable-content pre')[1].innerText;vscode.postMessage({command:'copy',text:tree})}function copyContent(){const content=document.querySelectorAll('.scrollable-content pre')[2].innerText;vscode.postMessage({command:'copy',text:content})}function copyAll(){const allContent=[document.querySelectorAll('.scrollable-content pre')[0].innerText,document.querySelectorAll('.scrollable-content pre')[1].innerText,document.querySelectorAll('.scrollable-content pre')[2].innerText].join('\\n\\n');vscode.postMessage({command:'copy',text:allContent})}function saveToFile(){const summary=document.querySelectorAll('.scrollable-content pre')[0].innerText;const tree=document.querySelectorAll('.scrollable-content pre')[1].innerText;const content=document.querySelectorAll('.scrollable-content pre')[2].innerText;vscode.postMessage({command:'saveToFile',data:{summary,tree,content}})}${pathScript}</script>`;
+    const content = `<div class="shadow-wrapper"><div class="content-wrapper"><div class="grid"><div>${Section({ title: 'Summary', content: escapeHtml(data.summary), copyFunction: 'copySummary()' })}${buttonGroup}</div>${Section({ title: 'Directory Structure', content: escapeHtml(data.tree), copyFunction: 'copyTree()' })}</div>${Section({ title: 'Files Content', content: escapeHtml(data.content), copyFunction: 'copyContent()' })}</div></div><script>function reIngest(){const pathValue=document.querySelector('[data-path]')?.getAttribute('data-path');if(pathValue){vscode.postMessage({command:'reIngest',path:pathValue})}}function copySummary(){const summary=document.querySelectorAll('.scrollable-content pre')[0].innerText;vscode.postMessage({command:'copy',text:summary})}function copyTree(){const tree=document.querySelectorAll('.scrollable-content pre')[1].innerText;vscode.postMessage({command:'copy',text:tree})}function copyContent(){const content=document.querySelectorAll('.scrollable-content pre')[2].innerText;vscode.postMessage({command:'copy',text:content})}function copyAll(){const allContent=[document.querySelectorAll('.scrollable-content pre')[0].innerText,document.querySelectorAll('.scrollable-content pre')[1].innerText,document.querySelectorAll('.scrollable-content pre')[2].innerText].join('\\n\\n');vscode.postMessage({command:'copy',text:allContent})}function saveToFile(){const summary=document.querySelectorAll('.scrollable-content pre')[0].innerText;const tree=document.querySelectorAll('.scrollable-content pre')[1].innerText;const content=document.querySelectorAll('.scrollable-content pre')[2].innerText;vscode.postMessage({command:'saveToFile',data:{summary,tree,content}})}</script>`;
     return createHtmlDocument(content, getBaseStyles(THEME));
 }
 
 // Utils
 
 function createHtmlDocument(content: string, styles: string): string {
-    return `<!DOCTYPE html><html><head><style>${styles}</style><script>const vscode = acquireVsCodeApi();</script></head><body>${content}</body></html>`;
+    return `<!DOCTYPE html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline';"><style>${styles}</style><script>const vscode = acquireVsCodeApi();</script></head><body>${content}</body></html>`;
 }

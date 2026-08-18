@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { COMMANDS } from './config';
 import { AnalysisService } from './services/analysisService';
@@ -8,6 +9,7 @@ import { processManager } from './utils/processManager';
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     AnalysisService.setScriptPath(context);
     AnalysisService.setContext(context);
+    WorkspaceService.setContext(context);
 
     const commands = registerCommands(context);
 
@@ -53,7 +55,7 @@ async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
         return;
     }
 
-    const folderName = folderUri.fsPath.split('/').pop() || '';
+    const folderName = path.basename(folderUri.fsPath);
     const panel = WebviewService.createAnalysisPanel(`GitIngest: ${folderName}`);
 
     panel.onDidDispose(() => {

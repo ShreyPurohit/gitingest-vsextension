@@ -4,9 +4,33 @@ import { ERROR_MESSAGES } from '../config';
 
 export class WorkspaceService {
     private static readonly DEFAULT_INGEST_FOLDER_NAME = 'gitingest-ingest';
+    private static readonly TRACKED_INGEST_PATH_KEY = 'gitingest.trackedIngestPath';
+    private static extensionContext: vscode.ExtensionContext | undefined;
+
+    public static setContext(context: vscode.ExtensionContext): void {
+        this.extensionContext = context;
+    }
 
     public static getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
         return vscode.workspace.workspaceFolders?.[0];
+    }
+
+    private static getTrackedIngestPath(): string | undefined {
+        return this.extensionContext?.workspaceState.get<string>(this.TRACKED_INGEST_PATH_KEY);
+    }
+
+    private static setTrackedIngestPath(pathValue: string): Thenable<void> {
+        if (!this.extensionContext) {
+            return Promise.reject(new Error('Extension context not initialized'));
+        }
+        return this.extensionContext.workspaceState.update(this.TRACKED_INGEST_PATH_KEY, pathValue);
+    }
+
+    private static clearTrackedIngestPath(): Thenable<void> {
+        if (!this.extensionContext) {
+            return Promise.reject(new Error('Extension context not initialized'));
+        }
+        return this.extensionContext.workspaceState.update(this.TRACKED_INGEST_PATH_KEY, undefined);
     }
 
     public static async saveResultsToFile(data: {
@@ -58,8 +82,7 @@ export class WorkspaceService {
         }
 
         await vscode.workspace.fs.createDirectory(ingestRoot);
-
-        // (No marker file is created here — the ingest folder is managed directly.)
+        await this.setTrackedIngestPath(ingestRoot.fsPath);
 
         const stat = await vscode.workspace.fs.stat(resourceUri);
         const baseName = path.basename(resourcePath);
@@ -193,16 +216,22 @@ export class WorkspaceService {
         }
 
         const ingestRoot = this.getIngestRoot(workspaceRoot);
+        const trackedIngestPath = this.getTrackedIngestPath();
+        const isTrackedPath =
+            typeof trackedIngestPath === 'string' &&
+            path.resolve(trackedIngestPath) === path.resolve(ingestRoot.fsPath);
 
-        try {
-            // Check existence first
-            await vscode.workspace.fs.stat(ingestRoot);
-        } catch {
-            // Nothing to delete
+        if (!isTrackedPath) {
             return;
         }
 
-        // Safety: ensure ingestRoot is inside the workspaceRoot
+        try {
+            await vscode.workspace.fs.stat(ingestRoot);
+        } catch {
+            await this.clearTrackedIngestPath();
+            return;
+        }
+
         try {
             const rel = path.relative(workspaceRoot.fsPath, ingestRoot.fsPath);
             if (rel.startsWith('..') || path.isAbsolute(rel)) {
@@ -212,14 +241,15 @@ export class WorkspaceService {
                 );
                 return;
             }
-        } catch (e) {
-            console.error('Failed to determine path relation for ingest cleanup', e);
+        } catch (error) {
+            console.error('Failed to determine path relation for ingest cleanup', error);
             return;
         }
 
         try {
             await vscode.workspace.fs.delete(ingestRoot, { recursive: true, useTrash: true });
             vscode.window.showInformationMessage(`Deleted ingest folder: ${ingestRoot.fsPath}`);
+            await this.clearTrackedIngestPath();
         } catch (err) {
             const msg =
                 err instanceof Error ? err.message : 'Unknown error while deleting ingest folder';

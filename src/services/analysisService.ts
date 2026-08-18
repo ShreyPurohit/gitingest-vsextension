@@ -34,7 +34,7 @@ export class AnalysisService {
             statusMessages.push({ text: 'Python installation verified ✓', type: 'success' });
             WebviewService.updateLoadingStatus(panel, statusMessages);
 
-            await this.pythonHandler.verifyGitIngest(workspaceFolder.uri.fsPath);
+            await this.pythonHandler.verifyGitIngest();
             statusMessages.push({ text: 'GitIngest package verified ✓', type: 'success' });
             WebviewService.updateLoadingStatus(panel, statusMessages);
         } catch (error) {
@@ -103,9 +103,10 @@ export class AnalysisService {
             const args =
                 patterns.length > 0 ? [pathTrimmed, JSON.stringify(patterns)] : [pathTrimmed];
             const output = await this.pythonHandler.executeScriptWithProcess(this.scriptPath, args);
+            const jsonPayload = this.extractJsonPayload(output);
             return {
                 type: 'success',
-                data: JSON.parse(output),
+                data: JSON.parse(jsonPayload),
             };
         } catch (error) {
             return {
@@ -113,5 +114,30 @@ export class AnalysisService {
                 message: error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR,
             };
         }
+    }
+
+    /**
+     * Extract the JSON payload from stdout that may contain warnings or other noise.
+     * Looks for delimiters emitted by gitingest-script.py; falls back to raw output
+     * for backward compatibility.
+     */
+    private static extractJsonPayload(output: string): string {
+        const startMarker = '__GITINGEST_JSON_START__';
+        const endMarker = '__GITINGEST_JSON_END__';
+        const startIdx = output.indexOf(startMarker);
+        const endIdx = output.indexOf(endMarker);
+
+        if (startIdx !== -1 && endIdx !== -1) {
+            return output.substring(startIdx + startMarker.length, endIdx).trim();
+        }
+
+        // Fallback: try to find the first { and last } for raw JSON
+        const firstBrace = output.indexOf('{');
+        const lastBrace = output.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+            return output.substring(firstBrace, lastBrace + 1);
+        }
+
+        return output;
     }
 }

@@ -44,6 +44,7 @@ export interface ButtonProps {
     variant?: 'primary' | 'danger';
     icon?: string;
     children: string;
+    attrs?: Record<string, string>;
 }
 
 export interface SectionProps {
