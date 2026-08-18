@@ -2,7 +2,7 @@
     "name": "gitingest",
     "displayName": "Gitingest",
     "description": "Turn any repository into a simple text digest of its codebase.",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "publisher": "iamshreydxv",
     "engines": {
         "vscode": "^1.63.0"
@@ -124,7 +124,7 @@
     ],
     "badges": [
         {
-            "url": "https://img.shields.io/badge/license-MIT-blue.svg",
+            "url": "https://img.shields.io/badge/license-MIT-blue.png",
             "href": "https://opensource.org/licenses/MIT",
             "description": "MIT License"
         }

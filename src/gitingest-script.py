@@ -40,4 +40,7 @@ except FileNotFoundError as e:
     raise
 
 output = {"summary": summary, "tree": tree, "content": content}
-print(json.dumps(output))
+sys.stdout.write("__GITINGEST_JSON_START__\n")
+sys.stdout.write(json.dumps(output))
+sys.stdout.write("\n__GITINGEST_JSON_END__\n")
+sys.stdout.flush()

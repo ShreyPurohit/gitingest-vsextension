@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.6.0] - Security & Stability Fixes
+
+Security Fix
+
+- Fixed security vulnerability in the results panel
+- Improved folder cleanup to prevent accidental deletion
+
+Fixed
+
+- Fixed ingesting files without extension
+- Fixed webview state when panel is hidden
+- Improved file handling on Windows
+
+---
+
 ## [0.5.0] - .gitingestignore & Re-Ingest
 
 Added
