@@ -4,9 +4,8 @@
 
 _Deep insights, modern UI, and effortless integration into your workflow._
 
-[![Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/iamshreydxv.gitingest)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/iamshreydxv.gitingest?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)
-[![Ratings](https://img.shields.io/visual-studio-marketplace/r/iamshreydxv.gitingest)](https://marketplace.visualstudio.com/items?itemName=iamshreydxv.gitingest)
+[![Open VSX Version](https://img.shields.io/open-vsx/v/iamshreydxv/gitingest?label=Open%20VSX)](https://open-vsx.org/extension/iamshreydxv/gitingest)
+[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/iamshreydxv/gitingest?label=Downloads)](https://open-vsx.org/extension/iamshreydxv/gitingest)
 
 </div>
 
