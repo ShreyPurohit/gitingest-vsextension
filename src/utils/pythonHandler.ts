@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
+import { StringDecoder } from 'string_decoder';
 import { ERROR_MESSAGES } from '../config';
 import { processManager } from './processManager';
 import { OsUtils } from './osUtils';
@@ -18,19 +19,31 @@ function runCommand(
     onSpawn?: (child: ChildProcess) => void,
 ): Promise<RunResult> {
     return new Promise((resolve, reject) => {
-        const child = spawn(cmd, args, { cwd, shell: false });
+        const child = spawn(cmd, args, {
+            cwd,
+            shell: false,
+            env: {
+                ...process.env,
+                PYTHONUTF8: '1',
+                PYTHONIOENCODING: 'utf-8',
+            },
+        });
         onSpawn?.(child);
         let stdout = '';
         let stderr = '';
+        const stdoutDecoder = new StringDecoder('utf8');
+        const stderrDecoder = new StringDecoder('utf8');
 
         child.stdout.on('data', (data) => {
-            stdout += data.toString();
+            stdout += stdoutDecoder.write(data);
         });
         child.stderr.on('data', (data) => {
-            stderr += data.toString();
+            stderr += stderrDecoder.write(data);
         });
         child.on('error', (err) => reject(err));
         child.on('close', (code) => {
+            stdout += stdoutDecoder.end();
+            stderr += stderrDecoder.end();
             if (code === 0) {
                 resolve({ stdout, stderr, code: code ?? 0 });
             } else {

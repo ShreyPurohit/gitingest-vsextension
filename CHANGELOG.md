@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.6.1] - Encoding Fix
+
+Fixed
+
+- Fixed unreadable files and incorrect characters when ingesting files on Windows and other operating systems.
+- Improved UTF-8 handling for analysis output.
+
+---
+
 ## [0.6.0] - Security & Stability Fixes
 
 Security Fix
