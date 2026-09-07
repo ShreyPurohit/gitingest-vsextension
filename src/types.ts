@@ -10,6 +10,14 @@ export interface WebviewMessage {
     };
 }
 
+/** Filter options passed through to the gitingest engine. */
+export interface IngestOptions {
+    includePatterns: string[];
+    excludePatterns: string[];
+    /** Maximum size, in bytes, of a single file included in the digest. */
+    maxFileSize: number;
+}
+
 // Configuration types
 export interface ThemeColors {
     primary: string;

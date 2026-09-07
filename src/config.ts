@@ -17,6 +17,11 @@ export const COMMANDS = {
     reIngest: 'vscode-gitingest.reIngest',
 } as const;
 
+/** Matches the gitingest package default of 10 MB per file. */
+export const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
+export const MIN_ALLOWED_FILE_SIZE = 1024;
+export const MAX_ALLOWED_FILE_SIZE = 100 * 1024 * 1024;
+
 export const WEBVIEW_OPTIONS = {
     enableScripts: true,
     retainContextWhenHidden: true,
