@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ERROR_MESSAGES } from '../config';
+import { copyIntoIngest, findFreeName, IngestFileSystem } from '../utils/ingestCopy';
 import { isSameOrChild, normalizePath, resolveIngestDestination } from '../utils/ingestPaths';
 
 export class WorkspaceService {
@@ -100,23 +101,21 @@ export class WorkspaceService {
             await vscode.workspace.fs.createDirectory(destinationParent);
         }
 
-        const destination = await this.getUniqueIngestChildUri(
-            destinationParent,
-            leafName,
-            isDirectory ? 'directory' : 'file',
-        );
-
+        let destination: string;
         try {
-            await vscode.workspace.fs.copy(resourceUri, destination, { overwrite: false });
+            destination = await copyIntoIngest(
+                this.fileSystem,
+                resourceUri.fsPath,
+                destinationParent.fsPath,
+                leafName,
+                isDirectory,
+            );
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown copy error.';
             throw new Error(`Failed to add to ingest: ${message}`);
         }
 
-        const addedPath = path
-            .relative(ingestRoot.fsPath, destination.fsPath)
-            .split(path.sep)
-            .join('/');
+        const addedPath = path.relative(ingestRoot.fsPath, destination).split(path.sep).join('/');
         vscode.window.showInformationMessage(`Added to ingest: ${addedPath}`);
     }
 
@@ -125,18 +124,38 @@ export class WorkspaceService {
         baseName: string,
         ext: string,
     ): Promise<vscode.Uri> {
-        let attempt = 0;
-        while (true) {
-            const name = attempt === 0 ? `${baseName}${ext}` : `${baseName} (${attempt})${ext}`;
-            const uri = vscode.Uri.joinPath(root, name);
-            try {
-                await vscode.workspace.fs.stat(uri);
-                attempt += 1;
-            } catch {
-                return uri;
-            }
-        }
+        const free = await findFreeName(this.fileSystem, root.fsPath, `${baseName}${ext}`, 'file');
+        return vscode.Uri.file(free);
     }
+
+    /** `vscode.workspace.fs` behind the path-based port used by the staging helpers. */
+    private static readonly fileSystem: IngestFileSystem = {
+        async exists(targetPath: string): Promise<boolean> {
+            try {
+                await vscode.workspace.fs.stat(vscode.Uri.file(targetPath));
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        async readDirectory(directoryPath: string) {
+            const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(directoryPath));
+            return entries.map(([name, type]) => ({
+                name,
+                isDirectory: (type & vscode.FileType.Directory) !== 0,
+            }));
+        },
+        async createDirectory(directoryPath: string): Promise<void> {
+            await vscode.workspace.fs.createDirectory(vscode.Uri.file(directoryPath));
+        },
+        async copy(sourcePath: string, destinationPath: string): Promise<void> {
+            await vscode.workspace.fs.copy(
+                vscode.Uri.file(sourcePath),
+                vscode.Uri.file(destinationPath),
+                { overwrite: false },
+            );
+        },
+    };
 
     private static formatAnalysisContent(data: {
         summary: string;
@@ -152,33 +171,6 @@ export class WorkspaceService {
             '\n## Files Content\n',
             data.content,
         ].join('\n');
-    }
-
-    private static async getUniqueIngestChildUri(
-        parent: vscode.Uri,
-        name: string,
-        kind: 'file' | 'directory',
-    ): Promise<vscode.Uri> {
-        const parsed = path.parse(name);
-        const baseName = parsed.name || parsed.base; // parsed.base covers names like '..'
-        const extension = kind === 'file' ? parsed.ext : '';
-        let attempt = 0;
-
-        while (true) {
-            const candidateName =
-                attempt === 0
-                    ? name
-                    : extension && kind === 'file'
-                      ? `${baseName} (${attempt})${extension}`
-                      : `${baseName} (${attempt})`;
-            const candidate = vscode.Uri.joinPath(parent, candidateName);
-            try {
-                await vscode.workspace.fs.stat(candidate);
-                attempt += 1;
-            } catch {
-                return candidate;
-            }
-        }
     }
 
     private static getIngestRoot(workspaceRoot: vscode.Uri): vscode.Uri {
