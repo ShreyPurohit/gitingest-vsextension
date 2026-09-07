@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased]
+
+Added
+
+- **Setting** `gitingest.preserveStructureOnAdd` (default `true`) to control the staging layout described below.
+
+Fixed
+
+- **Add to Ingest** now preserves the workspace-relative path of the selected item ([#13](https://github.com/ShreyPurohit/gitingest-vsextension/issues/13)): `src/utils/helpers/example.ts` is staged as `<ingest>/src/utils/helpers/example.ts` instead of a flat `<ingest>/example.ts`, so the digest keeps each file's real location.
+- Staging a folder that already exists in the ingest folder fills that folder instead of creating a second `<folder> (1)` beside it. Files still get the ` (1)` suffix rather than being overwritten.
+
+---
+
 ## [0.6.1] - Encoding Fix
 
 Fixed

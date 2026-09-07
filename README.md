@@ -166,6 +166,12 @@ Before getting started, ensure you have:
 3. Once you've selected all desired items, run the analysis
 4. Optionally enable auto-cleanup in settings
 
+Staged items keep their location: `src/utils/helpers/example.ts` is staged as
+`gitingest-ingest/src/utils/helpers/example.ts`, so the digest still shows where each file lives.
+Adding a folder you have already staged files from fills the same mirrored folder rather than
+creating a second one. Set `gitingest.preserveStructureOnAdd` to `false` to stage everything
+flatly by name instead.
+
 </details>
 
 <div align="center">
@@ -249,6 +255,7 @@ GitIngest handles these automatically:
 Access via **File > Preferences > Settings > Extensions > GitIngest**:
 
 - **Ingest Folder Name** – Folder name used to stage files when using "Add to Ingest" (default: `gitingest-ingest`).
+- **Preserve Structure On Add** – Keep the workspace-relative path of staged files and folders (default: `true`).
 - **Delete After Ingest** – When enabled, the staging folder is removed after a successful analysis.
 - **File Exclusions** – Glob patterns to exclude from ingestion (e.g. `**/node_modules`, `**/*.min.js`). Applied in addition to `.gitignore` and `.gitingestignore`.
 
