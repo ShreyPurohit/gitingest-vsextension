@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased]
+
+Added
+
+- **Filter row in the results panel**, in the shape of the one on gitingest.com: an Exclude/Include selector with a single pattern field, and an "Include files under" size slider. **Re-Ingest** applies them without leaving the panel, **Reset to Settings** restores the configured defaults, and **GitIngest: Re-Ingest Last Folder** reuses the last applied filters.
+- **Settings** `gitingest.includePatterns` and `gitingest.maxFileSize`, forwarded to the gitingest engine along with the existing exclusions.
+
+Changed
+
+- The wrapper script now takes a JSON options object as its second argument instead of a JSON array of exclude patterns. A bare array is still accepted. Filters left at their defaults are omitted from the payload, and a run with no filters passes no second argument at all, so an unconfigured ingest is unchanged.
+
+---
+
 ## [0.6.1] - Encoding Fix
 
 Fixed

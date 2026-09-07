@@ -213,6 +213,18 @@ Interactive tree view with smart filtering:
 - ❌ Node_modules filtered out
 - ❌ IDE-specific files hidden
 
+### 🎚️ Filters & Re-Ingest
+
+Above the results, the same controls gitingest.com gives you:
+
+- an **Exclude / Include** selector and one pattern field (`*.md, src/`)
+- an **Include files under** slider for the size limit
+
+Press **Re-Ingest** to re-run with the new filters, or **Reset to Settings** to go back to your
+configured defaults. Switching the selector keeps the other list — your configured exclusions stay
+in effect while you narrow the digest with an include pattern. The last used filters are reused by
+**GitIngest: Re-Ingest Last Folder**.
+
 ### 📄 File Content Analysis
 
 Detailed breakdown including:
@@ -251,6 +263,10 @@ Access via **File > Preferences > Settings > Extensions > GitIngest**:
 - **Ingest Folder Name** – Folder name used to stage files when using "Add to Ingest" (default: `gitingest-ingest`).
 - **Delete After Ingest** – When enabled, the staging folder is removed after a successful analysis.
 - **File Exclusions** – Glob patterns to exclude from ingestion (e.g. `**/node_modules`, `**/*.min.js`). Applied in addition to `.gitignore` and `.gitingestignore`.
+- **Include Patterns** – Glob patterns to include (e.g. `src/**`). When empty, everything that is not excluded is included.
+- **Max File Size** – Maximum size in bytes of a single file in the digest (default: `10485760`).
+
+The pattern and size settings are the starting point for the filter bar in the results panel, which can override them for a single run.
 
 ### .gitingestignore
 
