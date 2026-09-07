@@ -1,15 +1,23 @@
 // Message types
 export interface WebviewMessage {
-    command: 'analyze' | 'cancel' | 'copy' | 'saveToFile' | 'retry' | 'reIngest';
+    command:
+        | 'analyze'
+        | 'cancel'
+        | 'copy'
+        | 'saveToFile'
+        | 'openInEditor'
+        | 'retry'
+        | 'reIngest'
+        | 'toggleFilter';
     text?: string;
     path?: string;
+    /** Which part of the digest a copy applies to; the extension holds the text. */
+    section?: 'summary' | 'tree' | 'content' | 'all';
+    /** Tree entry clicked, and which list the panel is editing. */
+    pattern?: string;
+    mode?: 'include' | 'exclude';
     /** Filters edited in the results panel; untrusted, normalized before use. */
     options?: unknown;
-    data?: {
-        summary: string;
-        tree: string;
-        content: string;
-    };
 }
 
 /** Filter options passed through to the gitingest engine. */
@@ -65,7 +73,10 @@ export interface ButtonProps {
 
 export interface SectionProps {
     title: string;
+    /** Escaped text rendered in the default <pre> body. */
     content: string;
     copyButton?: boolean;
     copyFunction?: string;
+    /** Custom body markup, replacing the default <pre>. */
+    body?: string;
 }
