@@ -58,6 +58,12 @@
                     "description": "Folder name used to stage files and folders when running GitIngest.",
                     "scope": "resource"
                 },
+                "gitingest.preserveStructureOnAdd": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Preserve the workspace-relative path when adding files or folders to the ingest folder (e.g. src/utils/example.ts is staged as <ingest>/src/utils/example.ts). Disable to stage items flatly by name.",
+                    "scope": "resource"
+                },
                 "gitingest.deleteAfterIngest": {
                     "type": "boolean",
                     "default": false,

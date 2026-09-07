@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ERROR_MESSAGES } from '../config';
+import { isSameOrChild, normalizePath, resolveIngestDestination } from '../utils/ingestPaths';
 
 export class WorkspaceService {
     private static readonly DEFAULT_INGEST_FOLDER_NAME = 'gitingest-ingest';
@@ -69,31 +70,39 @@ export class WorkspaceService {
 
         const workspaceRoot = workspaceFolder.uri;
         const ingestRoot = this.getIngestRoot(workspaceRoot);
-        const resourcePath = this.normalizeFsPath(resourceUri);
-        const rootPath = this.normalizeFsPath(workspaceRoot);
-        const ingestPath = this.normalizeFsPath(ingestRoot);
-        if (this.isSameOrChild(ingestPath, resourcePath)) {
+        const resourcePath = normalizePath(resourceUri.fsPath);
+        const rootPath = normalizePath(workspaceRoot.fsPath);
+        const ingestPath = normalizePath(ingestRoot.fsPath);
+        if (isSameOrChild(ingestPath, resourcePath)) {
             vscode.window.showInformationMessage('Resource is already in the ingest folder.');
             return;
         }
 
-        if (!this.isSameOrChild(rootPath, resourcePath)) {
-            throw new Error('Selected item must be inside the workspace root.');
-        }
+        const destinationInfo = resolveIngestDestination(
+            rootPath,
+            resourcePath,
+            this.shouldPreserveStructure(workspaceRoot),
+        );
 
         await vscode.workspace.fs.createDirectory(ingestRoot);
         await this.setTrackedIngestPath(ingestRoot.fsPath);
 
         const stat = await vscode.workspace.fs.stat(resourceUri);
-        const baseName = path.basename(resourcePath);
-        if (!baseName) {
-            throw new Error('Selected item has no name.');
+        const isDirectory = (stat.type & vscode.FileType.Directory) !== 0;
+
+        const parentSegments = destinationInfo.segments.slice(0, -1);
+        const leafName = destinationInfo.segments[destinationInfo.segments.length - 1];
+        const destinationParent =
+            parentSegments.length > 0
+                ? vscode.Uri.joinPath(ingestRoot, ...parentSegments)
+                : ingestRoot;
+        if (parentSegments.length > 0) {
+            await vscode.workspace.fs.createDirectory(destinationParent);
         }
 
-        const isDirectory = (stat.type & vscode.FileType.Directory) !== 0;
         const destination = await this.getUniqueIngestChildUri(
-            ingestRoot,
-            baseName,
+            destinationParent,
+            leafName,
             isDirectory ? 'directory' : 'file',
         );
 
@@ -104,9 +113,11 @@ export class WorkspaceService {
             throw new Error(`Failed to add to ingest: ${message}`);
         }
 
-        vscode.window.showInformationMessage(
-            `Added to ingest: ${path.basename(destination.fsPath)}`,
-        );
+        const addedPath = path
+            .relative(ingestRoot.fsPath, destination.fsPath)
+            .split(path.sep)
+            .join('/');
+        vscode.window.showInformationMessage(`Added to ingest: ${addedPath}`);
     }
 
     private static async getUniqueRootFileUri(
@@ -170,21 +181,15 @@ export class WorkspaceService {
         }
     }
 
-    private static normalizeFsPath(uri: vscode.Uri): string {
-        return path.normalize(uri.fsPath);
-    }
-
-    private static isSameOrChild(basePath: string, candidatePath: string): boolean {
-        const relative = path.relative(basePath, candidatePath);
-        return (
-            relative === '' ||
-            (!!relative && !relative.startsWith('..') && !path.isAbsolute(relative))
-        );
-    }
-
     private static getIngestRoot(workspaceRoot: vscode.Uri): vscode.Uri {
         const folderName = this.getIngestFolderName(workspaceRoot);
         return vscode.Uri.joinPath(workspaceRoot, folderName);
+    }
+
+    private static shouldPreserveStructure(workspaceRoot: vscode.Uri): boolean {
+        return vscode.workspace
+            .getConfiguration('gitingest', workspaceRoot)
+            .get<boolean>('preserveStructureOnAdd', true);
     }
 
     private static getIngestFolderName(workspaceRoot: vscode.Uri): string {
