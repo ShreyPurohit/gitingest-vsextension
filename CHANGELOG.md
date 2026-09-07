@@ -8,11 +8,15 @@ All notable changes to this project will be documented in this file.
 
 Added
 
+- **Clickable directory tree:** click an entry to filter it - struck through when excluded, highlighted when included, clicking again undoes it. The **Exclude / Include** selector decides which list is edited, folders are added as `<folder>/**`, and an entry is never in both lists. Nothing re-runs until **Re-Ingest** is pressed.
+- **Open in Editor:** review a digest in an unsaved markdown tab instead of writing `digest.txt` into the workspace.
+- **Summary chips** above the results for files analyzed, estimated tokens and the other summary facts.
 - **Filter row in the results panel**, in the shape of the one on gitingest.com: an Exclude/Include selector with a single pattern field, and an "Include files under" size slider. **Re-Ingest** applies them without leaving the panel, **Reset to Settings** restores the configured defaults, and **GitIngest: Re-Ingest Last Folder** reuses the last applied filters.
 - **Settings** `gitingest.includePatterns` and `gitingest.maxFileSize`, forwarded to the gitingest engine along with the existing exclusions.
 
 Changed
 
+- The results panel keeps the digest in the extension rather than in the webview DOM, so copy, save and open no longer duplicate large digests in HTML attributes.
 - The wrapper script now takes a JSON options object as its second argument instead of a JSON array of exclude patterns. A bare array is still accepted. Filters left at their defaults are omitted from the payload, and a run with no filters passes no second argument at all, so an unconfigured ingest is unchanged.
 
 ---
