@@ -35,11 +35,13 @@ export function normalizeMaxFileSize(value: unknown): number {
     return Math.min(rounded, MAX_ALLOWED_FILE_SIZE);
 }
 
-export function normalizeIngestOptions(options: Partial<IngestOptions> | undefined): IngestOptions {
+/** Build a valid options object from untrusted input (settings or webview messages). */
+export function normalizeIngestOptions(options: unknown): IngestOptions {
+    const source = (options ?? {}) as Record<string, unknown>;
     return {
-        includePatterns: normalizePatterns(options?.includePatterns),
-        excludePatterns: normalizePatterns(options?.excludePatterns),
-        maxFileSize: normalizeMaxFileSize(options?.maxFileSize),
+        includePatterns: normalizePatterns(source.includePatterns),
+        excludePatterns: normalizePatterns(source.excludePatterns),
+        maxFileSize: normalizeMaxFileSize(source.maxFileSize),
     };
 }
 

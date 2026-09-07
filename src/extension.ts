@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { COMMANDS } from './config';
-import { AnalysisService } from './services/analysisService';
+import { AnalysisService, LAST_INGEST_OPTIONS_KEY } from './services/analysisService';
 import { WebviewService } from './services/webviewService';
 import { WorkspaceService } from './services/workspaceService';
 import { processManager } from './utils/processManager';
@@ -113,7 +113,8 @@ async function handleReIngest(context: vscode.ExtensionContext): Promise<void> {
     });
     try {
         await AnalysisService.verifyDependencies(panel);
-        await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...');
+        const lastOptions = context.workspaceState.get<unknown>(LAST_INGEST_OPTIONS_KEY);
+        await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...', lastOptions);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);

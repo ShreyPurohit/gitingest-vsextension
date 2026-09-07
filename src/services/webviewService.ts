@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WEBVIEW_OPTIONS } from '../config';
-import { AnalysisResultData, StatusMessage } from '../types';
+import { AnalysisResultData, ResultFilters, StatusMessage } from '../types';
 import { handleWebviewMessage } from './messageHandler';
 import { getErrorContent, getLoadingContent, getResultsContent } from '../webview';
 
@@ -37,7 +37,8 @@ export class WebviewService {
         panel: vscode.WebviewPanel,
         data: AnalysisResultData,
         ingestedPath?: string,
+        filters?: ResultFilters,
     ): void {
-        panel.webview.html = getResultsContent(data, ingestedPath);
+        panel.webview.html = getResultsContent(data, ingestedPath, filters);
     }
 }

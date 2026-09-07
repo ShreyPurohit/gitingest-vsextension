@@ -8,6 +8,7 @@ import { WebviewService } from './webviewService';
 import { WorkspaceService } from './workspaceService';
 
 const LAST_INGESTED_PATH_KEY = 'gitingest.lastIngestedPath';
+export const LAST_INGEST_OPTIONS_KEY = 'gitingest.lastIngestOptions';
 
 export class AnalysisService {
     private static pythonHandler = PythonHandler.getInstance();
@@ -47,7 +48,7 @@ export class AnalysisService {
         panel: vscode.WebviewPanel,
         targetPath: string,
         statusMessage: string,
-        optionsOverride?: Partial<IngestOptions>,
+        optionsOverride?: unknown,
     ): Promise<void> {
         WebviewService.updateLoadingStatus(panel, [
             { text: 'Python installation verified ✓', type: 'success' },
@@ -63,9 +64,13 @@ export class AnalysisService {
         }
 
         if (result.data) {
-            WebviewService.showResults(panel, result.data, targetPath);
+            WebviewService.showResults(panel, result.data, targetPath, {
+                applied: options,
+                defaults: this.resolveIngestOptions(targetPath),
+            });
             if (this.extensionContext) {
                 this.extensionContext.workspaceState.update(LAST_INGESTED_PATH_KEY, targetPath);
+                this.extensionContext.workspaceState.update(LAST_INGEST_OPTIONS_KEY, options);
             }
             // After successfully showing results, attempt to clean up staged ingest folder
             try {
@@ -88,7 +93,7 @@ export class AnalysisService {
      */
     public static resolveIngestOptions(
         targetPath: string,
-        optionsOverride?: Partial<IngestOptions>,
+        optionsOverride?: unknown,
     ): IngestOptions {
         if (optionsOverride) {
             return normalizeIngestOptions(optionsOverride);

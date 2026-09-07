@@ -87,7 +87,12 @@ async function handleReIngestCommand(
     await processManager.killCurrentProcess();
     try {
         await AnalysisService.verifyDependencies(panel);
-        await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...');
+        await AnalysisService.analyze(
+            panel,
+            pathTrimmed,
+            'Re-analyzing folder...',
+            message.options,
+        );
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);

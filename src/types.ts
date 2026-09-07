@@ -3,6 +3,8 @@ export interface WebviewMessage {
     command: 'analyze' | 'cancel' | 'copy' | 'saveToFile' | 'retry' | 'reIngest';
     text?: string;
     path?: string;
+    /** Filters edited in the results panel; untrusted, normalized before use. */
+    options?: unknown;
     data?: {
         summary: string;
         tree: string;
@@ -16,6 +18,12 @@ export interface IngestOptions {
     excludePatterns: string[];
     /** Maximum size, in bytes, of a single file included in the digest. */
     maxFileSize: number;
+}
+
+/** Filter state shown in the results panel: what the run used, and what the settings say. */
+export interface ResultFilters {
+    applied: IngestOptions;
+    defaults: IngestOptions;
 }
 
 // Configuration types
