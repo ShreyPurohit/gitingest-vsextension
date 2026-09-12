@@ -59,7 +59,7 @@ Thank you for your interest in contributing to GitIngest Extension. This documen
 
 ## Continuous integration
 
-Every push and every pull request runs the **CI** workflow:
+Every push to `main` and every pull request into `main` runs the **CI** workflow:
 
 | Job          | What it checks                                       |
 | ------------ | ---------------------------------------------------- |
