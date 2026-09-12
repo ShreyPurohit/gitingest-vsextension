@@ -6,6 +6,7 @@ _Deep insights, modern UI, and effortless integration into your workflow._
 
 [![Open VSX Version](https://img.shields.io/open-vsx/v/iamshreydxv/gitingest?label=Open%20VSX)](https://open-vsx.org/extension/iamshreydxv/gitingest)
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/iamshreydxv/gitingest?label=Downloads)](https://open-vsx.org/extension/iamshreydxv/gitingest)
+[![CI](https://github.com/ShreyPurohit/gitingest-vsextension/actions/workflows/ci.yml/badge.svg)](https://github.com/ShreyPurohit/gitingest-vsextension/actions/workflows/ci.yml)
 
 </div>
 
@@ -100,7 +101,8 @@ GitIngest is a code editor extension that analyzes your entire codebase—Git re
 
 - Analyze entire repositories
 - Target specific folders
-- Selective file inclusion
+- Include / exclude patterns and size limits
+- Staged files keep their original paths
 - Optional cleanup after analysis
 
 </td>
@@ -169,8 +171,10 @@ Before getting started, ensure you have:
 Staged items keep their location: `src/utils/helpers/example.ts` is staged as
 `gitingest-ingest/src/utils/helpers/example.ts`, so the digest still shows where each file lives.
 Adding a folder you have already staged files from fills the same mirrored folder rather than
-creating a second one. Set `gitingest.preserveStructureOnAdd` to `false` to stage everything
-flatly by name instead.
+creating a second one. Files that would overwrite an existing staged copy get a ` (1)` /
+` (2)` suffix instead — so staging a nested file and then its parent folder can leave both
+`example.ts` and `example (1).ts` when the folder copy would collide. Set
+`gitingest.preserveStructureOnAdd` to `false` to stage everything flatly by name instead.
 
 </details>
 
@@ -219,6 +223,26 @@ Interactive tree view with smart filtering:
 - ❌ Node_modules filtered out
 - ❌ IDE-specific files hidden
 
+Click any entry in the tree to filter it: it is struck through when excluded, highlighted when
+included, and clicking again undoes it. Which list you are editing follows the **Exclude / Include**
+selector above, and folders are added as `<folder>/**`. An entry is never in both lists. The digest
+only re-runs when you press **Re-Ingest**, so you can mark several entries in one pass.
+
+### 🎚️ Filters & Re-Ingest
+
+Above the results, the same controls gitingest.com gives you:
+
+- an **Exclude / Include** selector and one pattern field (`*.md, src/`)
+- an **Include files under** slider for the size limit
+
+Press **Re-Ingest** to re-run with the new filters, or **Reset to Settings** to go back to your
+configured defaults. The row edits one list at a time: switching **Exclude / Include** keeps the
+other list in the background, so configured exclusions stay available while you narrow with an
+include pattern. When both lists have values after a run, the field opens on **Exclude** so those
+patterns stay visible; switch to **Include** to see or edit that list. **GitIngest: Re-Ingest Last
+Folder** (Command Palette) reuses the last filters applied from the panel, not a fresh read of
+settings.
+
 ### 📄 File Content Analysis
 
 Detailed breakdown including:
@@ -232,6 +256,7 @@ Detailed breakdown including:
 
 - 📋 **Copy to Clipboard** - Quick sharing
 - 💾 **Save as Text** - Local backup
+- 📝 **Open in Editor** - Review the digest in an unsaved tab, no file written
 
 ---
 
@@ -254,10 +279,17 @@ GitIngest handles these automatically:
 
 Access via **File > Preferences > Settings > Extensions > GitIngest**:
 
-- **Ingest Folder Name** – Folder name used to stage files when using "Add to Ingest" (default: `gitingest-ingest`).
-- **Preserve Structure On Add** – Keep the workspace-relative path of staged files and folders (default: `true`).
-- **Delete After Ingest** – When enabled, the staging folder is removed after a successful analysis.
-- **File Exclusions** – Glob patterns to exclude from ingestion (e.g. `**/node_modules`, `**/*.min.js`). Applied in addition to `.gitignore` and `.gitingestignore`.
+| Setting                            | Default                      | What it does                                                                       |
+| ---------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
+| `gitingest.ingestFolderName`       | `gitingest-ingest`           | Folder used to stage files when using Add to Ingest.                               |
+| `gitingest.preserveStructureOnAdd` | `true`                       | Keep the workspace-relative path of staged files and folders.                      |
+| `gitingest.deleteAfterIngest`      | `false`                      | Remove the staging folder after a successful analysis.                             |
+| `gitingest.fileExclusions`         | `**/node_modules`, `**/.git` | Glob patterns to exclude, in addition to `.gitignore` and `.gitingestignore`.      |
+| `gitingest.includePatterns`        | _(empty)_                    | Glob patterns to include; when empty, everything that is not excluded is included. |
+| `gitingest.maxFileSize`            | `10485760` (10 MB)           | Maximum size in bytes of a single file in the digest.                              |
+
+These pattern and size settings seed the filter bar in the results panel, which can override them
+for a single run. Panel overrides are what **Re-Ingest Last Folder** replays.
 
 ### .gitingestignore
 

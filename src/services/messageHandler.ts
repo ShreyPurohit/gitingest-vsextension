@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { ERROR_MESSAGES } from '../config';
-import { WebviewMessage } from '../types';
+import { AnalysisResultData, WebviewMessage } from '../types';
+import { normalizeIngestOptions } from '../utils/ingestOptions';
+import { togglePattern } from '../utils/patternToggle';
 import { processManager } from '../utils/processManager';
 import { AnalysisService } from './analysisService';
 import { WebviewService } from './webviewService';
@@ -19,10 +21,16 @@ export async function handleWebviewMessage(
                 await handleCancelCommand(panel);
                 break;
             case 'copy':
-                await handleCopyCommand(message.text);
+                await handleCopyCommand(panel, message);
                 break;
             case 'saveToFile':
-                await handleSaveToFile(message);
+                await handleSaveToFile(panel);
+                break;
+            case 'openInEditor':
+                await handleOpenInEditor(panel);
+                break;
+            case 'toggleFilter':
+                handleToggleFilter(panel, message);
                 break;
             case 'retry':
                 await handleAnalyzeCommand(panel);
@@ -59,11 +67,60 @@ async function handleCancelCommand(panel: vscode.WebviewPanel): Promise<void> {
     vscode.window.showInformationMessage('Analysis cancelled');
 }
 
-async function handleCopyCommand(text?: string): Promise<void> {
+async function handleCopyCommand(
+    panel: vscode.WebviewPanel,
+    message: WebviewMessage,
+): Promise<void> {
+    const text = message.section ? sectionText(panel, message.section) : message.text;
     if (text) {
         await vscode.env.clipboard.writeText(text);
         vscode.window.showInformationMessage('Analysis output copied to clipboard!');
     }
+}
+
+/**
+ * Read a part of the digest from the panel's state. The webview holds only the
+ * rendered markup, so copy, save and open never ship the text back and forth.
+ */
+function sectionText(
+    panel: vscode.WebviewPanel,
+    section: NonNullable<WebviewMessage['section']>,
+): string | undefined {
+    const data = WebviewService.getPanelState(panel)?.data;
+    if (!data) {
+        return undefined;
+    }
+
+    switch (section) {
+        case 'summary':
+            return data.summary;
+        case 'tree':
+            return data.tree;
+        case 'content':
+            return data.content;
+        case 'all':
+            return [data.summary, data.tree, data.content].join('\n\n');
+    }
+}
+
+/** Toggle a clicked tree entry in whichever list the panel is editing. */
+function handleToggleFilter(panel: vscode.WebviewPanel, message: WebviewMessage): void {
+    const pattern = typeof message.pattern === 'string' ? message.pattern : '';
+    const mode = message.mode === 'include' ? 'include' : 'exclude';
+    if (!pattern) {
+        return;
+    }
+
+    const current = normalizeIngestOptions(message.options);
+    WebviewService.updatePanelFilters(panel, togglePattern(current, pattern, mode));
+}
+
+function digest(panel: vscode.WebviewPanel): AnalysisResultData {
+    const data = WebviewService.getPanelState(panel)?.data;
+    if (!data) {
+        throw new Error('No analysis result is available in this panel.');
+    }
+    return data;
 }
 
 async function handleReIngestCommand(
@@ -87,25 +144,27 @@ async function handleReIngestCommand(
     await processManager.killCurrentProcess();
     try {
         await AnalysisService.verifyDependencies(panel);
-        await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...');
+        await AnalysisService.analyze(
+            panel,
+            pathTrimmed,
+            'Re-analyzing folder...',
+            message.options,
+        );
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);
     }
 }
 
-async function handleSaveToFile(message: WebviewMessage): Promise<void> {
+async function handleOpenInEditor(panel: vscode.WebviewPanel): Promise<void> {
+    await WorkspaceService.openResultsInEditor(digest(panel));
+}
+
+async function handleSaveToFile(panel: vscode.WebviewPanel): Promise<void> {
     const workspaceFolder = WorkspaceService.getWorkspaceFolder();
     if (!workspaceFolder) {
         throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
     }
 
-    try {
-        if (!message.data) {
-            throw new Error('No data provided to save');
-        }
-        await WorkspaceService.saveResultsToFile(message.data);
-    } catch (error) {
-        throw new Error('Failed to save analysis to file');
-    }
+    await WorkspaceService.saveResultsToFile(digest(panel));
 }

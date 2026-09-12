@@ -1,6 +1,9 @@
 .vscode/**
 .vscode-test/**
+.vscode-test.mjs
 out/**
+coverage/**
+scripts/**
 node_modules/**
 src/**
 !src/gitingest-script.py
@@ -14,6 +17,7 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+*.vsix
 assets/*
 !assets/gitingest-icon.png
 .venv/**

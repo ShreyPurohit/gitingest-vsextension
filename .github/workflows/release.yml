@@ -1,0 +1,75 @@
+# Build a VSIX and attach it to a GitHub Release.
+#
+# This workflow does NOT publish to the VS Code Marketplace or Open VSX.
+# Those need separate personal access tokens and are handled by the
+# "Publish" workflow (manual) or local commands — see CONTRIBUTING.md.
+#
+# Triggers:
+#   - Push a version tag matching v* (e.g. v0.7.0)
+#   - Manual run from the Actions tab (workflow_dispatch)
+
+name: Release
+
+on:
+    push:
+        tags: ['v*']
+    workflow_dispatch:
+        inputs:
+            create_github_release:
+                description: 'Create or update a GitHub Release for this run'
+                type: boolean
+                default: false
+
+permissions:
+    contents: write
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    release:
+        name: Build VSIX & GitHub Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: '24'
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build and package
+              run: npm run vsix
+
+            - name: Resolve package version
+              id: meta
+              shell: bash
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+                  echo "vsix=gitingest-${VERSION}.vsix" >> "$GITHUB_OUTPUT"
+
+            - name: Upload VSIX artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: gitingest-${{ steps.meta.outputs.version }}
+                  path: ${{ steps.meta.outputs.vsix }}
+                  if-no-files-found: error
+                  retention-days: 90
+
+            - name: Create GitHub Release
+              if: github.ref_type == 'tag' || inputs.create_github_release
+              uses: softprops/action-gh-release@v3
+              with:
+                  tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.meta.outputs.version) }}
+                  name: GitIngest ${{ steps.meta.outputs.version }}
+                  generate_release_notes: true
+                  files: ${{ steps.meta.outputs.vsix }}
+                  fail_on_unmatched_files: true
+                  target_commitish: ${{ github.sha }}
