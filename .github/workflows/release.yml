@@ -33,10 +33,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: '24'
                   cache: npm
@@ -56,7 +56,7 @@ jobs:
                   echo "vsix=gitingest-${VERSION}.vsix" >> "$GITHUB_OUTPUT"
 
             - name: Upload VSIX artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: gitingest-${{ steps.meta.outputs.version }}
                   path: ${{ steps.meta.outputs.vsix }}
@@ -65,7 +65,7 @@ jobs:
 
             - name: Create GitHub Release
               if: github.ref_type == 'tag' || inputs.create_github_release
-              uses: softprops/action-gh-release@v2
+              uses: softprops/action-gh-release@v3
               with:
                   tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.meta.outputs.version) }}
                   name: GitIngest ${{ steps.meta.outputs.version }}

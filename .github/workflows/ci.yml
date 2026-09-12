@@ -27,10 +27,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: '24'
                   cache: npm
@@ -59,10 +59,10 @@ jobs:
                 os: [ubuntu-latest, windows-latest]
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: '24'
                   cache: npm
@@ -74,11 +74,13 @@ jobs:
             - name: Build extension
               run: node esbuild.js
 
+            - name: Install xvfb
+              if: runner.os == 'Linux'
+              run: sudo apt-get update -q && sudo apt-get install -y xvfb
+
             - name: Run tests (Linux)
               if: runner.os == 'Linux'
-              uses: coactions/setup-xvfb@v1
-              with:
-                  run: npm test
+              run: xvfb-run -a npm test
               env:
                   # Avoid D-Bus "Could not parse server address" errors in headless CI
                   DBUS_SESSION_BUS_ADDRESS: ''
@@ -93,10 +95,10 @@ jobs:
         needs: quality
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: '24'
                   cache: npm
@@ -107,16 +109,17 @@ jobs:
             - name: Build extension
               run: node esbuild.js
 
+            - name: Install xvfb
+              run: sudo apt-get update -q && sudo apt-get install -y xvfb
+
             - name: Run coverage
-              uses: coactions/setup-xvfb@v1
-              with:
-                  run: npm run coverage
+              run: xvfb-run -a npm run coverage
               env:
                   DBUS_SESSION_BUS_ADDRESS: ''
 
             - name: Upload coverage report
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: coverage-report
                   path: coverage/
@@ -129,10 +132,10 @@ jobs:
         needs: [quality, test]
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                   node-version: '24'
                   cache: npm
@@ -144,7 +147,7 @@ jobs:
               run: npm run vsix
 
             - name: Upload VSIX
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: gitingest-vsix
                   path: '*.vsix'
