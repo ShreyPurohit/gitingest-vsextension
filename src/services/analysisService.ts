@@ -1,12 +1,14 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ERROR_MESSAGES } from '../config';
-import { AnalysisResult, StatusMessage } from '../types';
+import { DEFAULT_MAX_FILE_SIZE, ERROR_MESSAGES } from '../config';
+import { AnalysisResult, IngestOptions, StatusMessage } from '../types';
+import { normalizeIngestOptions, serializeIngestOptions } from '../utils/ingestOptions';
 import { PythonHandler } from '../utils/pythonHandler';
 import { WebviewService } from './webviewService';
 import { WorkspaceService } from './workspaceService';
 
 const LAST_INGESTED_PATH_KEY = 'gitingest.lastIngestedPath';
+export const LAST_INGEST_OPTIONS_KEY = 'gitingest.lastIngestOptions';
 
 export class AnalysisService {
     private static pythonHandler = PythonHandler.getInstance();
@@ -46,6 +48,7 @@ export class AnalysisService {
         panel: vscode.WebviewPanel,
         targetPath: string,
         statusMessage: string,
+        optionsOverride?: unknown,
     ): Promise<void> {
         WebviewService.updateLoadingStatus(panel, [
             { text: 'Python installation verified ✓', type: 'success' },
@@ -53,16 +56,21 @@ export class AnalysisService {
             { text: statusMessage, type: 'info' },
         ]);
 
-        const result = await this.getOutput(targetPath);
+        const options = this.resolveIngestOptions(targetPath, optionsOverride);
+        const result = await this.getOutput(targetPath, options);
 
         if (result.type === 'error') {
             throw new Error(result.message);
         }
 
         if (result.data) {
-            WebviewService.showResults(panel, result.data, targetPath);
+            WebviewService.showResults(panel, result.data, targetPath, {
+                applied: options,
+                defaults: this.resolveIngestOptions(targetPath),
+            });
             if (this.extensionContext) {
                 this.extensionContext.workspaceState.update(LAST_INGESTED_PATH_KEY, targetPath);
+                this.extensionContext.workspaceState.update(LAST_INGEST_OPTIONS_KEY, options);
             }
             // After successfully showing results, attempt to clean up staged ingest folder
             try {
@@ -79,7 +87,37 @@ export class AnalysisService {
         }
     }
 
-    public static async getOutput(repoPath: string): Promise<AnalysisResult> {
+    /**
+     * Resolve the filter options for a run: an explicit override (from the results panel)
+     * wins over the workspace settings, which fall back to the packaged defaults.
+     */
+    public static resolveIngestOptions(
+        targetPath: string,
+        optionsOverride?: unknown,
+    ): IngestOptions {
+        if (optionsOverride) {
+            return normalizeIngestOptions(optionsOverride);
+        }
+
+        const resource =
+            vscode.workspace.getWorkspaceFolder(vscode.Uri.file(targetPath))?.uri ??
+            WorkspaceService.getWorkspaceFolder()?.uri;
+        if (!resource) {
+            return normalizeIngestOptions(undefined);
+        }
+
+        const config = vscode.workspace.getConfiguration('gitingest', resource);
+        return normalizeIngestOptions({
+            includePatterns: config.get<string[]>('includePatterns', []),
+            excludePatterns: config.get<string[]>('fileExclusions', []),
+            maxFileSize: config.get<number>('maxFileSize', DEFAULT_MAX_FILE_SIZE),
+        });
+    }
+
+    public static async getOutput(
+        repoPath: string,
+        options?: IngestOptions,
+    ): Promise<AnalysisResult> {
         const pathTrimmed = typeof repoPath === 'string' ? repoPath.trim() : '';
         if (!pathTrimmed) {
             return {
@@ -88,20 +126,9 @@ export class AnalysisService {
             };
         }
         try {
-            const resource =
-                vscode.workspace.getWorkspaceFolder(vscode.Uri.file(pathTrimmed))?.uri ??
-                WorkspaceService.getWorkspaceFolder()?.uri;
-            const fileExclusions =
-                (resource
-                    ? vscode.workspace
-                          .getConfiguration('gitingest', resource)
-                          .get<string[]>('fileExclusions', [])
-                    : []) ?? [];
-            const patterns = fileExclusions.filter(
-                (p): p is string => typeof p === 'string' && p.trim() !== '',
-            );
-            const args =
-                patterns.length > 0 ? [pathTrimmed, JSON.stringify(patterns)] : [pathTrimmed];
+            const resolved = options ?? this.resolveIngestOptions(pathTrimmed);
+            const serialized = serializeIngestOptions(resolved);
+            const args = serialized ? [pathTrimmed, serialized] : [pathTrimmed];
             const output = await this.pythonHandler.executeScriptWithProcess(this.scriptPath, args);
             const jsonPayload = this.extractJsonPayload(output);
             return {

@@ -9,11 +9,17 @@ All notable changes to this project will be documented in this file.
 Added
 
 - **Setting** `gitingest.preserveStructureOnAdd` (default `true`) to control the staging layout described below.
+- **Filter row in the results panel**, in the shape of the one on gitingest.com: an Exclude/Include selector with a single pattern field, and an "Include files under" size slider. **Re-Ingest** applies them without leaving the panel, **Reset to Settings** restores the configured defaults, and **GitIngest: Re-Ingest Last Folder** reuses the last applied filters.
+- **Settings** `gitingest.includePatterns` and `gitingest.maxFileSize`, forwarded to the gitingest engine along with the existing exclusions.
 
 Fixed
 
 - **Add to Ingest** now preserves the workspace-relative path of the selected item ([#13](https://github.com/ShreyPurohit/gitingest-vsextension/issues/13)): `src/utils/helpers/example.ts` is staged as `<ingest>/src/utils/helpers/example.ts` instead of a flat `<ingest>/example.ts`, so the digest keeps each file's real location.
 - Staging a folder that already exists in the ingest folder fills that folder instead of creating a second `<folder> (1)` beside it. Files still get the ` (1)` suffix rather than being overwritten.
+
+Changed
+
+- The wrapper script now takes a JSON options object as its second argument instead of a JSON array of exclude patterns. A bare array is still accepted. Filters left at their defaults are omitted from the payload, and a run with no filters passes no second argument at all, so an unconfigured ingest is unchanged.
 
 ---
 

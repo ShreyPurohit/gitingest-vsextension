@@ -1,4 +1,10 @@
-"""GitIngest wrapper script. Receives repo path (argv[1]) in host OS form; argv[2] optional JSON array of extra exclude patterns."""
+"""GitIngest wrapper script.
+
+argv[1]: repository path in host OS form.
+argv[2]: optional JSON options object, e.g.
+    {"include_patterns": [...], "exclude_patterns": [...], "max_file_size": 10485760}
+A bare JSON array is still accepted and read as exclude patterns (legacy form).
+"""
 from __future__ import annotations
 
 import json
@@ -11,24 +17,59 @@ from gitingest import ingest
 # Pattern names are OS-agnostic (node_modules, .git exist on Windows, macOS, Linux).
 SAFE_EXCLUDE = {"**/node_modules", "**/.git", "node_modules", ".git"}
 
+
+def _patterns(value) -> set[str]:
+    """Collect non-empty, stripped strings from a JSON list."""
+    if not isinstance(value, list):
+        return set()
+    return {p.strip() for p in value if isinstance(p, str) and p.strip()}
+
+
+def _parse_options(raw: str) -> tuple[set[str], set[str], int | None]:
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return set(), set(), None
+
+    # Legacy form: a bare array of exclude patterns.
+    if isinstance(parsed, list):
+        return set(), _patterns(parsed), None
+
+    if not isinstance(parsed, dict):
+        return set(), set(), None
+
+    max_file_size = parsed.get("max_file_size")
+    if not isinstance(max_file_size, int) or isinstance(max_file_size, bool) or max_file_size <= 0:
+        max_file_size = None
+
+    return (
+        _patterns(parsed.get("include_patterns")),
+        _patterns(parsed.get("exclude_patterns")),
+        max_file_size,
+    )
+
+
 if len(sys.argv) < 2 or not (sys.argv[1] or "").strip():
     print("Error: repository path (argv[1]) is required.", file=sys.stderr)
     sys.exit(1)
 
 repo = (sys.argv[1] or "").strip()
+include_patterns: set[str] = set()
 exclude_patterns = set(SAFE_EXCLUDE)
+max_file_size = None
+
 if len(sys.argv) > 2 and (sys.argv[2] or "").strip():
-    try:
-        patterns = json.loads(sys.argv[2])
-        if isinstance(patterns, list):
-            for p in patterns:
-                if isinstance(p, str) and p.strip():
-                    exclude_patterns.add(p.strip())
-    except (json.JSONDecodeError, TypeError):
-        pass
+    include_patterns, extra_excludes, max_file_size = _parse_options(sys.argv[2])
+    exclude_patterns |= extra_excludes
+
+kwargs = {"exclude_patterns": exclude_patterns}
+if include_patterns:
+    kwargs["include_patterns"] = include_patterns
+if max_file_size is not None:
+    kwargs["max_file_size"] = max_file_size
 
 try:
-    summary, tree, content = ingest(repo, exclude_patterns=exclude_patterns)
+    summary, tree, content = ingest(repo, **kwargs)
 except FileNotFoundError as e:
     err_str = str(e)
     if "node_modules" in err_str or ".git" in err_str or ".gitignore" in err_str:
