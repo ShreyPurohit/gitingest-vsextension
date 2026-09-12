@@ -27,7 +27,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v7
 
             - name: Setup Node.js
               uses: actions/setup-node@v5
@@ -59,7 +59,7 @@ jobs:
                 os: [ubuntu-latest, windows-latest]
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v7
 
             - name: Setup Node.js
               uses: actions/setup-node@v5
@@ -95,7 +95,7 @@ jobs:
         needs: quality
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v7
 
             - name: Setup Node.js
               uses: actions/setup-node@v5
@@ -132,7 +132,7 @@ jobs:
         needs: [quality, test]
         steps:
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v7
 
             - name: Setup Node.js
               uses: actions/setup-node@v5
