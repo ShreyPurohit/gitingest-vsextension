@@ -1,21 +1,25 @@
 # Continuous integration for the GitIngest VS Code extension.
 #
-# Jobs (all run on every push and pull request):
+# Jobs:
 #   1. quality  – format, lint, typecheck, production build
 #   2. test     – extension tests on Ubuntu and Windows
 #   3. coverage – src-only coverage report (Ubuntu)
 #   4. package  – build a .vsix and upload it as a workflow artifact
 #
-# Package waits for quality + test so a broken build never ships a VSIX artifact.
+# Triggers: pushes to main, and pull requests into main.
+# Feature / Dependabot branches are covered by the pull_request event only
+# (so each Dependabot PR does not also get a duplicate run from push).
 
 name: CI
 
 on:
     push:
+        branches: [main]
     pull_request:
+        branches: [main]
 
 concurrency:
-    group: ci-${{ github.workflow }}-${{ github.ref }}
+    group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
 
 permissions:
