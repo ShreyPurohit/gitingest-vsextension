@@ -36,10 +36,61 @@ Thank you for your interest in contributing to GitIngest Extension. This documen
     - Press `F5` or use **Run > Start Debugging** to launch the Extension Development Host with the extension loaded.
 
 5. **Run tests**
+
     ```bash
     npm run test
     ```
+
     Runs the test suite in the VS Code test environment. Ensure the extension is built first (`npm run compile` or `node esbuild.js`) so `dist/extension.js` is up to date.
+
+6. **Coverage (optional)**
+
+    ```bash
+    npm run coverage
+    ```
+
+    Writes an HTML report under `coverage/` for production sources in `src/` only.
+
+7. **Package a VSIX (optional)**
+    ```bash
+    npm run vsix
+    ```
+    Typechecks, lints, builds for production, and produces `gitingest-<version>.vsix`.
+
+## Continuous integration
+
+Every push and every pull request runs the **CI** workflow:
+
+| Job          | What it checks                                       |
+| ------------ | ---------------------------------------------------- |
+| Lint & build | Prettier, ESLint, TypeScript, production esbuild     |
+| Test         | Extension tests on Ubuntu and Windows                |
+| Coverage     | Source coverage report (uploaded as an artifact)     |
+| Package VSIX | Builds a `.vsix` artifact after quality + tests pass |
+
+Tagged releases (`v*`) and manual **Release** workflow runs only:
+
+1. Build a `.vsix`
+2. Upload it as a workflow artifact
+3. Optionally attach it to a **GitHub Release**
+
+That step does **not** need marketplace tokens. Publishing to stores is separate because each store has its own account and PAT:
+
+| Target                    | Secret name | Where to get it                                                    |
+| ------------------------- | ----------- | ------------------------------------------------------------------ |
+| Visual Studio Marketplace | `VSCE_PAT`  | Azure DevOps PAT with **Marketplace (Acquire)**                    |
+| Open VSX                  | `OVSX_PAT`  | [open-vsx.org → tokens](https://open-vsx.org/user-settings/tokens) |
+
+Add both under **Settings → Secrets and variables → Actions**, then either:
+
+- Run the **Publish** workflow from the Actions tab (choose Marketplace, Open VSX, or both), or
+- Publish locally from the VSIX:
+
+```bash
+npm run vsix
+npx vsce publish --packagePath gitingest-<version>.vsix --pat <VSCE_PAT>
+npx ovsx publish gitingest-<version>.vsix --pat <OVSX_PAT>
+```
 
 ## Code Style
 

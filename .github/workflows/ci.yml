@@ -1,42 +1,152 @@
+# Continuous integration for the GitIngest VS Code extension.
+#
+# Jobs (all run on every push and pull request):
+#   1. quality  – format, lint, typecheck, production build
+#   2. test     – extension tests on Ubuntu and Windows
+#   3. coverage – src-only coverage report (Ubuntu)
+#   4. package  – build a .vsix and upload it as a workflow artifact
+#
+# Package waits for quality + test so a broken build never ships a VSIX artifact.
+
 name: CI
 
 on:
     push:
     pull_request:
 
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
 jobs:
-    build-lint-test:
+    quality:
+        name: Lint & build
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout
+              uses: actions/checkout@v4
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: '22'
-                  cache: 'npm'
+                  cache: npm
 
             - name: Install dependencies
               run: npm ci
 
+            - name: Check formatting
+              run: npm run format:check
+
             - name: Lint
               run: npm run lint
 
-            - name: Prettier
-              run: npm run format:check
+            - name: Typecheck
+              run: npm run check-types
 
-            - name: Build
-              run: npm run check-types && node esbuild.js
+            - name: Production build
+              run: node esbuild.js --production
 
-            - name: Start xvfb (for VS Code extension tests)
-              run: |
-                  sudo apt-get update -q
-                  sudo apt-get install -y xvfb
-                  /usr/bin/Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+    test:
+        name: Test (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest, windows-latest]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-            - name: Test
-              run: npm run test
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            # Extension host loads dist/extension.js
+            - name: Build extension
+              run: node esbuild.js
+
+            - name: Run tests (Linux)
+              if: runner.os == 'Linux'
+              uses: coactions/setup-xvfb@v1
+              with:
+                  run: npm test
               env:
-                  DISPLAY: ':99'
                   # Avoid D-Bus "Could not parse server address" errors in headless CI
                   DBUS_SESSION_BUS_ADDRESS: ''
+
+            - name: Run tests (Windows)
+              if: runner.os == 'Windows'
+              run: npm test
+
+    coverage:
+        name: Coverage
+        runs-on: ubuntu-latest
+        needs: quality
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build extension
+              run: node esbuild.js
+
+            - name: Run coverage
+              uses: coactions/setup-xvfb@v1
+              with:
+                  run: npm run coverage
+              env:
+                  DBUS_SESSION_BUS_ADDRESS: ''
+
+            - name: Upload coverage report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-report
+                  path: coverage/
+                  if-no-files-found: ignore
+                  retention-days: 14
+
+    package:
+        name: Package VSIX
+        runs-on: ubuntu-latest
+        needs: [quality, test]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build and package
+              run: npm run vsix
+
+            - name: Upload VSIX
+              uses: actions/upload-artifact@v4
+              with:
+                  name: gitingest-vsix
+                  path: '*.vsix'
+                  if-no-files-found: error
+                  retention-days: 14

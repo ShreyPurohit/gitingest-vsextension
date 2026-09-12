@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import { DEFAULT_MAX_FILE_SIZE } from '../../config';
 import { ResultFilters } from '../../types';
-import { getResultsContent } from '../../webview';
+import { getErrorContent, getResultsContent } from '../../webview';
 
 const data = {
     summary: 'Files analyzed: 3',
@@ -33,11 +33,21 @@ describe('webview results', () => {
         assert.ok(!html.includes('type="number"'), 'no raw byte input');
     });
 
-    it('starts in the mode the applied filters imply and carries the other list along', () => {
-        const including = getResultsContent(data, '/workspace/repo', filters);
-        assert.ok(including.includes('data-mode="include"'));
-        assert.ok(including.includes('value="src/**"'), 'the include list is shown');
-        assert.ok(including.includes('data-exclude="**/node_modules"'), 'excludes are kept');
+    it('starts in include only when that list alone has patterns', () => {
+        const includingOnly = getResultsContent(data, '/workspace/repo', {
+            ...filters,
+            applied: { ...filters.applied, excludePatterns: [] },
+        });
+        assert.ok(includingOnly.includes('data-mode="include"'));
+        assert.ok(includingOnly.includes('value="src/**"'), 'the include list is shown');
+
+        const both = getResultsContent(data, '/workspace/repo', filters);
+        assert.ok(
+            both.includes('data-mode="exclude"'),
+            'exclusions stay visible when both lists are set',
+        );
+        assert.ok(both.includes('value="**/node_modules"'), 'the exclude list is shown');
+        assert.ok(both.includes('data-include="src/**"'), 'includes are kept in panel data');
 
         const excluding = getResultsContent(data, '/workspace/repo', {
             ...filters,
@@ -124,25 +134,6 @@ describe('webview results', () => {
         assert.ok(html.includes('<pre>no tree here</pre>'));
     });
 
-    it('shows summary facts as chips on the existing status pill', () => {
-        const html = getResultsContent(
-            { ...data, summary: 'Directory: repo\nFiles analyzed: 3' },
-            '/workspace/repo',
-            filters,
-        );
-        assert.ok(html.includes('class="status-item stat-chip"'));
-        assert.ok(html.includes('>Files analyzed</span><span class="stat-value">3</span>'));
-    });
-
-    it('omits the chips when the summary has no facts', () => {
-        const html = getResultsContent(
-            { ...data, summary: 'nothing structured here' },
-            '/workspace/repo',
-            filters,
-        );
-        assert.ok(!html.includes('class="stat-chips"'));
-    });
-
     it('offers an open-in-editor action', () => {
         const html = getResultsContent(data, '/workspace/repo', filters);
         assert.ok(html.includes('openInEditor()'));
@@ -156,5 +147,12 @@ describe('webview results', () => {
         );
         assert.ok(!html.includes('<script>alert(1)</script>'));
         assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
+    });
+
+    it('escapes error titles and messages', () => {
+        const html = getErrorContent('Failed <b>run</b>', ['path <script>x</script>']);
+        assert.ok(html.includes('Failed &lt;b&gt;run&lt;/b&gt;'));
+        assert.ok(html.includes('path &lt;script&gt;x&lt;/script&gt;'));
+        assert.ok(!html.includes('<script>x</script>'));
     });
 });

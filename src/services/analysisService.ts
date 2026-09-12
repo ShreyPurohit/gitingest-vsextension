@@ -95,7 +95,7 @@ export class AnalysisService {
         targetPath: string,
         optionsOverride?: unknown,
     ): IngestOptions {
-        if (optionsOverride) {
+        if (optionsOverride !== undefined && optionsOverride !== null) {
             return normalizeIngestOptions(optionsOverride);
         }
 

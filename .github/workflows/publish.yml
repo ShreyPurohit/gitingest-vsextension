@@ -1,0 +1,92 @@
+# Publish a VSIX to extension marketplaces (manual only).
+#
+# This does not run on push or tags. Use the Release workflow first if you
+# want a GitHub Release; then run Publish when you are ready to push stores.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   VSCE_PAT  – Azure DevOps PAT with Marketplace (Acquire)
+#               for https://marketplace.visualstudio.com
+#   OVSX_PAT  – Open VSX token from
+#               https://open-vsx.org/user-settings/tokens
+#
+# Enable one or both targets when starting the workflow. A selected target
+# fails with a clear error if its secret is missing.
+
+name: Publish
+
+on:
+    workflow_dispatch:
+        inputs:
+            publish_vscode_marketplace:
+                description: 'Publish to Visual Studio Marketplace (needs VSCE_PAT)'
+                type: boolean
+                default: true
+            publish_open_vsx:
+                description: 'Publish to Open VSX (needs OVSX_PAT)'
+                type: boolean
+                default: true
+
+permissions:
+    contents: read
+
+concurrency:
+    group: publish-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    publish:
+        name: Publish to marketplaces
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build VSIX
+              run: npm run vsix
+
+            - name: Resolve VSIX path
+              id: meta
+              shell: bash
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  VSIX="gitingest-${VERSION}.vsix"
+                  if [[ ! -f "$VSIX" ]]; then
+                    echo "Expected $VSIX in the workspace root."
+                    ls -la
+                    exit 1
+                  fi
+                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+                  echo "vsix=${VSIX}" >> "$GITHUB_OUTPUT"
+
+            - name: Publish to Visual Studio Marketplace
+              if: inputs.publish_vscode_marketplace
+              env:
+                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
+              shell: bash
+              run: |
+                  if [[ -z "${VSCE_PAT}" ]]; then
+                    echo "::error::VSCE_PAT secret is not set. Add an Azure DevOps PAT with Marketplace (Acquire) under repo Actions secrets."
+                    exit 1
+                  fi
+                  npx vsce publish --packagePath "${{ steps.meta.outputs.vsix }}" --pat "$VSCE_PAT"
+
+            - name: Publish to Open VSX
+              if: inputs.publish_open_vsx
+              env:
+                  OVSX_PAT: ${{ secrets.OVSX_PAT }}
+              shell: bash
+              run: |
+                  if [[ -z "${OVSX_PAT}" ]]; then
+                    echo "::error::OVSX_PAT secret is not set. Create a token at https://open-vsx.org/user-settings/tokens and add it under repo Actions secrets."
+                    exit 1
+                  fi
+                  npx ovsx publish "${{ steps.meta.outputs.vsix }}" --pat "$OVSX_PAT"

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sys
+from typing import Any
 
 from gitingest import ingest
 
@@ -18,22 +19,20 @@ from gitingest import ingest
 SAFE_EXCLUDE = {"**/node_modules", "**/.git", "node_modules", ".git"}
 
 
-def _patterns(value) -> set[str]:
-    """Collect non-empty, stripped strings from a JSON list."""
+def patterns_from_value(value: Any) -> set[str]:
     if not isinstance(value, list):
         return set()
     return {p.strip() for p in value if isinstance(p, str) and p.strip()}
 
 
-def _parse_options(raw: str) -> tuple[set[str], set[str], int | None]:
+def parse_options(raw: str) -> tuple[set[str], set[str], int | None]:
     try:
         parsed = json.loads(raw)
     except (json.JSONDecodeError, TypeError):
         return set(), set(), None
 
-    # Legacy form: a bare array of exclude patterns.
     if isinstance(parsed, list):
-        return set(), _patterns(parsed), None
+        return set(), patterns_from_value(parsed), None
 
     if not isinstance(parsed, dict):
         return set(), set(), None
@@ -43,8 +42,8 @@ def _parse_options(raw: str) -> tuple[set[str], set[str], int | None]:
         max_file_size = None
 
     return (
-        _patterns(parsed.get("include_patterns")),
-        _patterns(parsed.get("exclude_patterns")),
+        patterns_from_value(parsed.get("include_patterns")),
+        patterns_from_value(parsed.get("exclude_patterns")),
         max_file_size,
     )
 
@@ -59,7 +58,7 @@ exclude_patterns = set(SAFE_EXCLUDE)
 max_file_size = None
 
 if len(sys.argv) > 2 and (sys.argv[2] or "").strip():
-    include_patterns, extra_excludes, max_file_size = _parse_options(sys.argv[2])
+    include_patterns, extra_excludes, max_file_size = parse_options(sys.argv[2])
     exclude_patterns |= extra_excludes
 
 kwargs = {"exclude_patterns": exclude_patterns}

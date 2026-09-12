@@ -4,26 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [Unreleased]
+## [0.7.0] - Filters, Results Panel & Path Preservation
 
 Added
 
-- **Setting** `gitingest.preserveStructureOnAdd` (default `true`) to control the staging layout described below.
-- **Clickable directory tree:** click an entry to filter it - struck through when excluded, highlighted when included, clicking again undoes it. The **Exclude / Include** selector decides which list is edited, folders are added as `<folder>/**`, and an entry is never in both lists. Nothing re-runs until **Re-Ingest** is pressed.
-- **Open in Editor:** review a digest in an unsaved markdown tab instead of writing `digest.txt` into the workspace.
-- **Summary chips** above the results for files analyzed, estimated tokens and the other summary facts.
-- **Filter row in the results panel**, in the shape of the one on gitingest.com: an Exclude/Include selector with a single pattern field, and an "Include files under" size slider. **Re-Ingest** applies them without leaving the panel, **Reset to Settings** restores the configured defaults, and **GitIngest: Re-Ingest Last Folder** reuses the last applied filters.
-- **Settings** `gitingest.includePatterns` and `gitingest.maxFileSize`, forwarded to the gitingest engine along with the existing exclusions.
-
-Fixed
-
-- **Add to Ingest** now preserves the workspace-relative path of the selected item ([#13](https://github.com/ShreyPurohit/gitingest-vsextension/issues/13)): `src/utils/helpers/example.ts` is staged as `<ingest>/src/utils/helpers/example.ts` instead of a flat `<ingest>/example.ts`, so the digest keeps each file's real location.
-- Staging a folder that already exists in the ingest folder fills that folder instead of creating a second `<folder> (1)` beside it. Files still get the ` (1)` suffix rather than being overwritten.
+- **Preserve staging paths** when using Add to Ingest ([#13](https://github.com/ShreyPurohit/gitingest-vsextension/issues/13)): workspace-relative locations are mirrored under the ingest folder (e.g. `src/utils/helpers/example.ts` → `<ingest>/src/utils/helpers/example.ts`). Setting `gitingest.preserveStructureOnAdd` (default `true`) restores the previous flat-by-name layout when disabled.
+- **Folder merge on stage:** adding a folder that already exists in the ingest folder fills that folder instead of creating `<folder> (1)`. Existing files are never overwritten; collisions get a ` (1)`, ` (2)`, … suffix.
+- **Ingest filters** aligned with gitingest.com: settings `gitingest.includePatterns` and `gitingest.maxFileSize`, plus the existing `gitingest.fileExclusions`, forwarded to the engine. A filter row on the results panel (Exclude/Include selector, pattern field, size slider) supports **Re-Ingest** and **Reset to Settings**. **GitIngest: Re-Ingest Last Folder** reuses the last filters applied from the panel (not a fresh read of settings).
+- **Clickable directory tree:** click an entry to toggle it in the active Exclude/Include list (folders as `<folder>/**`). Struck through when excluded, highlighted when included; a second click undoes. An entry is never kept in both lists. Nothing re-runs until **Re-Ingest**.
+- **Open in Editor:** open the digest as an unsaved markdown tab without writing `digest.txt`.
 
 Changed
 
-- The results panel keeps the digest in the extension rather than in the webview DOM, so copy, save and open no longer duplicate large digests in HTML attributes.
-- The wrapper script now takes a JSON options object as its second argument instead of a JSON array of exclude patterns. A bare array is still accepted. Filters left at their defaults are omitted from the payload, and a run with no filters passes no second argument at all, so an unconfigured ingest is unchanged.
+- The Python wrapper accepts a JSON options object as `argv[2]` (`include_patterns`, `exclude_patterns`, `max_file_size`). A bare JSON array is still accepted as exclude patterns. Fields left at their defaults are omitted from the payload; when there is nothing custom to send, `argv[2]` is omitted entirely. In typical use the default file-exclusion list means an options argument is still sent.
+- Copy, save and open read the digest from extension panel state instead of shipping a second copy through the webview DOM.
 
 ---
 
@@ -129,16 +123,4 @@ Changed
 
 ## [0.0.4] – Stable
 
-### Added
-
-- ✅ Right-click context menu support in the VS Code Explorer.
-- ✅ Improved CLI error handling and usage flow.
-
----
-
-## [0.0.1] – Initial Release
-
-### Added
-
-- ✅ Analyze current folder using GitIngest CLI.
-- ✅ Supports GitHub public repositories via CLI (requires global install).
+- Initial stable release of GitIngest as a VS Code extension.
