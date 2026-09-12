@@ -219,6 +219,11 @@ Interactive tree view with smart filtering:
 - ❌ Node_modules filtered out
 - ❌ IDE-specific files hidden
 
+Click any entry in the tree to filter it: it is struck through when excluded, highlighted when
+included, and clicking again undoes it. Which list you are editing follows the **Exclude / Include**
+selector above, and folders are added as `<folder>/**`. An entry is never in both lists. The digest
+only re-runs when you press **Re-Ingest**, so you can mark several entries in one pass.
+
 ### 🎚️ Filters & Re-Ingest
 
 Above the results, the same controls gitingest.com gives you:
@@ -244,6 +249,7 @@ Detailed breakdown including:
 
 - 📋 **Copy to Clipboard** - Quick sharing
 - 💾 **Save as Text** - Local backup
+- 📝 **Open in Editor** - Review the digest in an unsaved tab, no file written
 
 ---
 

@@ -78,6 +78,76 @@ describe('webview results', () => {
         assert.ok(html.includes('data-path="/workspace/repo"'));
     });
 
+    it('renders tree entries as clickable rows instead of extra buttons', () => {
+        const html = getResultsContent(data, '/workspace/repo', filters);
+        assert.ok(html.includes('class="tree-line tree-entry'));
+        assert.ok(html.includes('onclick="toggleEntry(this)"'));
+        assert.ok(html.includes('data-pattern="src/**"'));
+        assert.ok(html.includes('data-pattern="src/a.ts"'));
+        assert.ok(!html.includes('tree-action'), 'no + / - buttons');
+    });
+
+    it('strikes entries that are excluded and highlights included ones', () => {
+        const html = getResultsContent(data, '/workspace/repo', {
+            ...filters,
+            applied: {
+                ...filters.applied,
+                includePatterns: ['src/**'],
+                excludePatterns: ['src/a.ts'],
+            },
+        });
+        const included = html.match(
+            /class="tree-line tree-entry[^"]*"[^>]*data-pattern="src\/\*\*"/,
+        );
+        const excluded = html.match(
+            /class="tree-line tree-entry[^"]*"[^>]*data-pattern="src\/a\.ts"/,
+        );
+        assert.ok(included?.[0].includes('is-included'));
+        assert.ok(excluded?.[0].includes('is-excluded'));
+        assert.ok(html.includes('.tree-entry.is-excluded {text-decoration: line-through'));
+    });
+
+    it('leaves the digest in the extension instead of duplicating it in the DOM', () => {
+        const html = getResultsContent(data, '/workspace/repo', filters);
+        assert.ok(!html.includes('data-raw'));
+        assert.ok(html.includes("command: 'copy', section: section"));
+        assert.ok(html.includes("vscode.postMessage({ command: 'saveToFile' })"));
+    });
+
+    it('falls back to plain text when the tree is not in the expected format', () => {
+        const html = getResultsContent(
+            { ...data, tree: 'no tree here' },
+            '/workspace/repo',
+            filters,
+        );
+        assert.ok(!html.includes('class="tree"'));
+        assert.ok(html.includes('<pre>no tree here</pre>'));
+    });
+
+    it('shows summary facts as chips on the existing status pill', () => {
+        const html = getResultsContent(
+            { ...data, summary: 'Directory: repo\nFiles analyzed: 3' },
+            '/workspace/repo',
+            filters,
+        );
+        assert.ok(html.includes('class="status-item stat-chip"'));
+        assert.ok(html.includes('>Files analyzed</span><span class="stat-value">3</span>'));
+    });
+
+    it('omits the chips when the summary has no facts', () => {
+        const html = getResultsContent(
+            { ...data, summary: 'nothing structured here' },
+            '/workspace/repo',
+            filters,
+        );
+        assert.ok(!html.includes('class="stat-chips"'));
+    });
+
+    it('offers an open-in-editor action', () => {
+        const html = getResultsContent(data, '/workspace/repo', filters);
+        assert.ok(html.includes('openInEditor()'));
+    });
+
     it('escapes analysis output', () => {
         const html = getResultsContent(
             { ...data, content: '<script>alert(1)</script>' },
