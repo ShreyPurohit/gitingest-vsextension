@@ -88,6 +88,19 @@ describe('webview results', () => {
         assert.ok(html.includes('data-path="/workspace/repo"'));
     });
 
+    it('disables Re-Ingest with a hover reason when staging was deleted after ingest', () => {
+        const reason = 'Staging folder was deleted after ingest. Add files again to re-run.';
+        const html = getResultsContent(data, '/workspace/gitingest-ingest', {
+            ...filters,
+            reIngestUnavailableReason: reason,
+        });
+        assert.ok(html.includes('disabled'));
+        assert.ok(html.includes('aria-disabled="true"'));
+        assert.ok(html.includes(`title="${reason}"`));
+        assert.ok(html.includes('data-reingest-blocked="true"'));
+        assert.ok(!html.includes('onclick="reIngest()"'), 'disabled button has no click handler');
+    });
+
     it('renders tree entries as clickable rows instead of extra buttons', () => {
         const html = getResultsContent(data, '/workspace/repo', filters);
         assert.ok(html.includes('class="tree-line tree-entry'));

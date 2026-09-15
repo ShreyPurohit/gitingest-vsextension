@@ -4,6 +4,10 @@ import { DEFAULT_MAX_FILE_SIZE, ERROR_MESSAGES } from '../config';
 import { AnalysisResult, IngestOptions, StatusMessage } from '../types';
 import { normalizeIngestOptions, serializeIngestOptions } from '../utils/ingestOptions';
 import { PythonHandler } from '../utils/pythonHandler';
+import {
+    reIngestUnavailableAfterCleanup,
+    writeReIngestUnavailableReason,
+} from '../utils/reIngestAvailability';
 import { WebviewService } from './webviewService';
 import { WorkspaceService } from './workspaceService';
 
@@ -64,24 +68,44 @@ export class AnalysisService {
         }
 
         if (result.data) {
-            WebviewService.showResults(panel, result.data, targetPath, {
-                applied: options,
-                defaults: this.resolveIngestOptions(targetPath),
-            });
-            if (this.extensionContext) {
-                this.extensionContext.workspaceState.update(LAST_INGESTED_PATH_KEY, targetPath);
-                this.extensionContext.workspaceState.update(LAST_INGEST_OPTIONS_KEY, options);
-            }
-            // After successfully showing results, attempt to clean up staged ingest folder
+            // Capture before cleanup clears tracking.
+            const analyzedTrackedIngestRoot = WorkspaceService.isTrackedIngestRoot(targetPath);
+
+            let cleanupDeleted = false;
             try {
                 const workspaceRoot = WorkspaceService.getWorkspaceFolder();
                 if (workspaceRoot) {
-                    await WorkspaceService.cleanupIngestFolder(workspaceRoot.uri);
+                    cleanupDeleted = await WorkspaceService.cleanupIngestFolder(
+                        workspaceRoot.uri,
+                        targetPath,
+                    );
                 }
             } catch (cleanupError) {
-                // Log but don't disrupt successful analysis result display
                 console.error('Error cleaning up ingest folder:', cleanupError);
             }
+
+            const reIngestUnavailableReason = reIngestUnavailableAfterCleanup({
+                analyzedTrackedIngestRoot,
+                cleanupDeleted,
+            });
+
+            if (this.extensionContext) {
+                await this.extensionContext.workspaceState.update(
+                    LAST_INGESTED_PATH_KEY,
+                    targetPath,
+                );
+                await this.extensionContext.workspaceState.update(LAST_INGEST_OPTIONS_KEY, options);
+                await writeReIngestUnavailableReason(
+                    this.extensionContext,
+                    reIngestUnavailableReason,
+                );
+            }
+
+            WebviewService.showResults(panel, result.data, targetPath, {
+                applied: options,
+                defaults: this.resolveIngestOptions(targetPath),
+                reIngestUnavailableReason,
+            });
         } else {
             throw new Error('Analysis result data is undefined');
         }

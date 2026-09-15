@@ -32,6 +32,11 @@ export interface IngestOptions {
 export interface ResultFilters {
     applied: IngestOptions;
     defaults: IngestOptions;
+    /**
+     * When set, Re-Ingest is shown disabled with this text as the hover title.
+     * Used when the staging folder was removed by Delete After Ingest.
+     */
+    reIngestUnavailableReason?: string;
 }
 
 // Configuration types
@@ -69,6 +74,9 @@ export interface ButtonProps {
     icon?: string;
     children: string;
     attrs?: Record<string, string>;
+    /** Native disabled + hover title for unavailable actions. */
+    disabled?: boolean;
+    title?: string;
 }
 
 export interface SectionProps {

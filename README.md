@@ -279,14 +279,14 @@ GitIngest handles these automatically:
 
 Access via **File > Preferences > Settings > Extensions > GitIngest**:
 
-| Setting                            | Default                      | What it does                                                                       |
-| ---------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------- |
-| `gitingest.ingestFolderName`       | `gitingest-ingest`           | Folder used to stage files when using Add to Ingest.                               |
-| `gitingest.preserveStructureOnAdd` | `true`                       | Keep the workspace-relative path of staged files and folders.                      |
-| `gitingest.deleteAfterIngest`      | `false`                      | Remove the staging folder after a successful analysis.                             |
-| `gitingest.fileExclusions`         | `**/node_modules`, `**/.git` | Glob patterns to exclude, in addition to `.gitignore` and `.gitingestignore`.      |
-| `gitingest.includePatterns`        | _(empty)_                    | Glob patterns to include; when empty, everything that is not excluded is included. |
-| `gitingest.maxFileSize`            | `10485760` (10 MB)           | Maximum size in bytes of a single file in the digest.                              |
+| Setting                            | Default                      | What it does                                                                                                                    |
+| ---------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `gitingest.ingestFolderName`       | `gitingest-ingest`           | Folder used to stage files when using Add to Ingest.                                                                            |
+| `gitingest.preserveStructureOnAdd` | `true`                       | Keep the workspace-relative path of staged files and folders.                                                                   |
+| `gitingest.deleteAfterIngest`      | `false`                      | Delete the Add to Ingest staging folder after you successfully analyze that staging folder (not after analyzing other folders). |
+| `gitingest.fileExclusions`         | `**/node_modules`, `**/.git` | Glob patterns to exclude, in addition to `.gitignore` and `.gitingestignore`.                                                   |
+| `gitingest.includePatterns`        | _(empty)_                    | Glob patterns to include; when empty, everything that is not excluded is included.                                              |
+| `gitingest.maxFileSize`            | `10485760` (10 MB)           | Maximum size in bytes of a single file in the digest.                                                                           |
 
 These pattern and size settings seed the filter bar in the results panel, which can override them
 for a single run. Panel overrides are what **Re-Ingest Last Folder** replays.
