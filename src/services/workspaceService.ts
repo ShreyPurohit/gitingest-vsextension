@@ -203,32 +203,50 @@ export class WorkspaceService {
     }
 
     /**
-     * Delete the ingest root folder if the workspace configuration requests it.
-     * This is a no-op when the setting `gitingest.deleteAfterIngest` is false or
-     * when the ingest folder does not exist.
+     * Whether `candidatePath` is the Add-to-Ingest staging root currently
+     * tracked for optional post-ingest cleanup.
      */
-    public static async cleanupIngestFolder(workspaceRoot: vscode.Uri): Promise<void> {
+    public static isTrackedIngestRoot(candidatePath: string): boolean {
+        const tracked = this.getTrackedIngestPath();
+        if (!tracked || typeof candidatePath !== 'string' || !candidatePath.trim()) {
+            return false;
+        }
+        return path.resolve(tracked) === path.resolve(candidatePath.trim());
+    }
+
+    /**
+     * Delete the Add-to-Ingest staging root after a successful analysis of that
+     * same folder, when `gitingest.deleteAfterIngest` is enabled.
+     *
+     * Analyzing any other folder leaves the staging root untouched.
+     *
+     * @returns whether the staging root was deleted in this call
+     */
+    public static async cleanupIngestFolder(
+        workspaceRoot: vscode.Uri,
+        analyzedPath: string,
+    ): Promise<boolean> {
         const config = vscode.workspace.getConfiguration('gitingest', workspaceRoot);
         const deleteAfter = config.get<boolean>('deleteAfterIngest', false);
         if (!deleteAfter) {
-            return;
+            return false;
+        }
+
+        // Only remove staging when this run analyzed that staging folder.
+        if (!this.isTrackedIngestRoot(analyzedPath)) {
+            return false;
         }
 
         const ingestRoot = this.getIngestRoot(workspaceRoot);
-        const trackedIngestPath = this.getTrackedIngestPath();
-        const isTrackedPath =
-            typeof trackedIngestPath === 'string' &&
-            path.resolve(trackedIngestPath) === path.resolve(ingestRoot.fsPath);
-
-        if (!isTrackedPath) {
-            return;
+        if (!this.isTrackedIngestRoot(ingestRoot.fsPath)) {
+            return false;
         }
 
         try {
             await vscode.workspace.fs.stat(ingestRoot);
         } catch {
             await this.clearTrackedIngestPath();
-            return;
+            return false;
         }
 
         try {
@@ -238,22 +256,24 @@ export class WorkspaceService {
                     'Ingest folder is not a child of workspace root; aborting delete',
                     ingestRoot.fsPath,
                 );
-                return;
+                return false;
             }
         } catch (error) {
             console.error('Failed to determine path relation for ingest cleanup', error);
-            return;
+            return false;
         }
 
         try {
             await vscode.workspace.fs.delete(ingestRoot, { recursive: true, useTrash: true });
             vscode.window.showInformationMessage(`Deleted ingest folder: ${ingestRoot.fsPath}`);
             await this.clearTrackedIngestPath();
+            return true;
         } catch (err) {
             const msg =
                 err instanceof Error ? err.message : 'Unknown error while deleting ingest folder';
             console.error('Failed to delete ingest folder', err);
             vscode.window.showErrorMessage(`Failed to delete ingest folder: ${msg}`);
+            return false;
         }
     }
 }

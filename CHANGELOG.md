@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.7.1] - Staging Cleanup & Re-Ingest Guarding
+
+Changed
+
+- **Delete After Ingest** only removes the Add to Ingest staging folder when that staging folder was the one just analyzed. Analyzing any other folder leaves staging untouched.
+- **Re-Ingest** is disabled (with a hover reason) when staging was deleted after ingest; **GitIngest: Re-Ingest Last Folder** shows the same message instead of re-running a missing path.
+- Setting and README wording for `gitingest.deleteAfterIngest` updated to match the narrower cleanup behavior.
+- Dev tooling dependencies refreshed; TypeScript stays on 5.9.x so ESLint / typescript-eslint remain compatible (TypeScript 7 is not supported by that stack yet).
+
+---
+
 ## [0.7.0] - Filters, Results Panel & Path Preservation
 
 Added

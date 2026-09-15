@@ -57,13 +57,24 @@ function getStatusIcon(type: string): string {
 
 // Components
 
-function Button({ onClick, variant = 'primary', icon, children, attrs = {} }: ButtonProps): string {
+function Button({
+    onClick,
+    variant = 'primary',
+    icon,
+    children,
+    attrs = {},
+    disabled = false,
+    title,
+}: ButtonProps): string {
     const variantClasses = { primary: 'primary-button', danger: 'danger-button' };
     const attrString = Object.entries(attrs)
         .map(([key, value]) => `${key}="${value}"`)
         .join(' ');
     const attrPrefix = attrString ? ` ${attrString}` : '';
-    return `<button class="button ${variantClasses[variant]}" onclick="${onClick}"${attrPrefix}>${icon ? `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>` : ''}${children}</button>`;
+    const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+    const disabledAttr = disabled ? ' disabled aria-disabled="true"' : '';
+    const clickAttr = disabled ? '' : ` onclick="${onClick}"`;
+    return `<button class="button ${variantClasses[variant]}"${clickAttr}${disabledAttr}${titleAttr}${attrPrefix}>${icon ? `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>` : ''}${children}</button>`;
 }
 
 function Section({ title, content, copyButton = true, copyFunction, body }: SectionProps): string {
@@ -110,12 +121,13 @@ function TreeView(tree: string, filters?: ResultFilters): string {
  * the shared input styling and ordinary buttons.
  */
 function FilterPanel(ingestedPath: string, filters: ResultFilters): string {
-    const { applied, defaults } = filters;
+    const { applied, defaults, reIngestUnavailableReason } = filters;
     // The field edits one list at a time; the other rides along in the dataset
     // so switching mode never silently drops it.
     const mode = initialFilterMode(applied);
     const patterns = mode === 'include' ? applied.includePatterns : applied.excludePatterns;
     const sizeIndex = nearestStepIndex(applied.maxFileSize);
+    const reIngestBlocked = Boolean(reIngestUnavailableReason);
 
     const dataset = [
         `data-path="${escapeHtml(ingestedPath)}"`,
@@ -125,18 +137,21 @@ function FilterPanel(ingestedPath: string, filters: ResultFilters): string {
         `data-default-include="${escapeHtml(defaults.includePatterns.join(', '))}"`,
         `data-default-exclude="${escapeHtml(defaults.excludePatterns.join(', '))}"`,
         `data-default-size="${nearestStepIndex(defaults.maxFileSize)}"`,
-    ].join(' ');
+        reIngestBlocked ? 'data-reingest-blocked="true"' : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
 
     const option = (value: string, label: string): string =>
         `<option value="${value}"${value === mode ? ' selected' : ''}>${label}</option>`;
 
-    return `<div class="section-shadow-wrapper"><div class="content-box"><div id="gi-filters" ${dataset}><div class="filter-row"><select id="gi-mode" aria-label="Filter mode" onchange="switchMode()">${option('exclude', 'Exclude')}${option('include', 'Include')}</select><input id="gi-patterns" type="text" spellcheck="false" placeholder="*.md, src/" value="${escapeHtml(patterns.join(', '))}"></div><div class="filter-row filter-row-size"><label for="gi-size">Include files under: <strong id="gi-size-label">${formatFileSize(stepBytes(sizeIndex))}</strong></label><input id="gi-size" type="range" min="0" max="${FILE_SIZE_STEPS_KB.length - 1}" step="1" value="${sizeIndex}" oninput="updateSizeLabel()"></div></div><div class="button-group">${Button({ onClick: 'reIngest()', icon: icons.retry, children: 'Re-Ingest' })}${Button({ onClick: 'resetFilters()', icon: icons.reset, children: 'Reset to Settings' })}</div></div></div>`;
+    return `<div class="section-shadow-wrapper"><div class="content-box"><div id="gi-filters" ${dataset}><div class="filter-row"><select id="gi-mode" aria-label="Filter mode" onchange="switchMode()">${option('exclude', 'Exclude')}${option('include', 'Include')}</select><input id="gi-patterns" type="text" spellcheck="false" placeholder="*.md, src/" value="${escapeHtml(patterns.join(', '))}"></div><div class="filter-row filter-row-size"><label for="gi-size">Include files under: <strong id="gi-size-label">${formatFileSize(stepBytes(sizeIndex))}</strong></label><input id="gi-size" type="range" min="0" max="${FILE_SIZE_STEPS_KB.length - 1}" step="1" value="${sizeIndex}" oninput="updateSizeLabel()"></div></div><div class="button-group">${Button({ onClick: 'reIngest()', icon: icons.retry, children: 'Re-Ingest', disabled: reIngestBlocked, title: reIngestUnavailableReason })}${Button({ onClick: 'resetFilters()', icon: icons.reset, children: 'Reset to Settings' })}</div></div></div>`;
 }
 
 // Styles
 
 const getBaseStyles = (theme: ThemeColors = THEME) => `
-body {font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;padding: 20px;color: #1a1a1a;line-height: 1.6;background-color: #FFFDF8;}.shadow-wrapper {position: relative;}.shadow-wrapper::before {content: '';position: absolute;inset: 0;background: #1a1a1a;border-radius: 12px;transform: translate(2px, 2px);z-index: 10;}.content-wrapper {background: #fafafa;border: 3px solid #1a1a1a;border-radius: 12px;padding: 24px;position: relative;z-index: 20;}.loading-container {display: flex;justify-content: center;align-items: center;min-height: 400px;}.loading-content {width: 100%;max-width: 500px;text-align: center;}.loader-wrapper {margin-bottom: 2rem;}.loading-title {font-size: 1.5rem;font-weight: 600;margin: 1rem 0;color: #1a1a1a;}.loader {border: 4px solid #fff4da;border-top: 4px solid #ffc480;border-radius: 50%;width: 60px;height: 60px;animation: spin 1s linear infinite;margin: 0 auto;}.status-container {margin: 2rem 0;}.status-item {display: flex;align-items: center;justify-content: center;gap: 0.75rem;padding: 0.75rem;margin-bottom: 0.75rem;border-radius: 8px;background: #fff4da;border: 2px solid #1a1a1a;font-size: 1rem;transition: transform 0.2s ease;}.status-item:hover {transform: translateY(-1px);}.status-item.success {color: #27ae60;}.status-item.error {color: ${theme.danger};}.status-item.warning {color: #f39c12;}.status-item.info {color: #3498db;}.status-icon {display: flex;align-items: center;}.status-text {font-weight: 500;}@keyframes spin {0% {transform: rotate(0deg);}100% {transform: rotate(360deg);}}.inner-content {background: #fff4da;border: 3px solid #1a1a1a;border-radius: 12px;padding: 24px;position: relative;}.grid {display: grid;grid-template-columns: 1fr 1fr;gap: 24px;margin-bottom: 24px;}@media (max-width: 768px) {.grid {grid-template-columns: 1fr;}}.section-title {font-size: 1.25rem;font-weight: bold;color: #1a1a1a;margin-bottom: 16px;}.section-header {display: flex;justify-content: space-between;align-items: center;margin-bottom: 16px;}button {padding: 12px 24px;cursor: pointer;border-radius: 8px;font-weight: 600;font-size: 1rem;transition: all 0.2s;position: relative;z-index: 20;display: inline-flex;align-items: center;gap: 0.5rem;}.primary-button {background-color: #ffc480;color: #1a1a1a;border: 3px solid #1a1a1a;}.primary-button:hover {transform: translate(-1px, -1px);}.danger-button {background-color: ${theme.danger};color: white;border: 3px solid #1a1a1a;}.danger-button:hover {transform: translate(-1px, -1px);}.button-group {display: flex;gap: 12px;margin-top: 16px;}.section-shadow-wrapper {position: relative;margin-bottom: 16px;}.section-shadow-wrapper::before {content: '';position: absolute;inset: 0;background: #1a1a1a;border-radius: 8px;transform: translate(2px, 2px);z-index: 10;}.content-box {background: #fff4da;border: 3px solid #1a1a1a;border-radius: 8px;padding: 16px;position: relative;z-index: 20;display: flex;flex-direction: column;height: 100%;}textarea, input[type='number'], pre {font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size: 0.875rem;line-height: 1.5;padding: 12px;background: #fff4da;border: 3px solid #1a1a1a;border-radius: 4px;width: 100%;min-height: 150px;resize: vertical;white-space: pre-wrap;word-wrap: break-word;margin: 0;}.scrollable-content {position: relative;max-height: 300px;overflow-y: auto;overflow-x: hidden;border: 3px solid #1a1a1a;border-radius: 4px;background: #fff4da;}.scrollable-content pre {border: none;margin: 0;height: 100%;}.error-container {display: flex;justify-content: center;align-items: center;min-height: 400px;}.error-content {width: 100%;max-width: 500px;text-align: center;}.error-icon {color: ${theme.danger};margin-bottom: 1.5rem;}.error-title {font-size: 1.75rem;font-weight: 600;color: ${theme.danger};margin-bottom: 1.5rem;}.error-messages {margin: 2rem 0;}.error-message {display: flex;align-items: center;justify-content: center;gap: 0.75rem;padding: 0.75rem;margin-bottom: 0.75rem;border-radius: 8px;background: #fff4da;border: 2px solid #1a1a1a;font-size: 1rem;transition: transform 0.2s ease;}.error-message:hover {transform: translateY(-1px);}.error-message-icon {display: flex;align-items: center;color: ${theme.danger};}.error-message-text {font-weight: 500;color: #1a1a1a;}.error-actions {display: flex;gap: 1rem;justify-content: center;margin-top: 2rem;}.filter-row {display: flex;align-items: center;gap: 12px;flex-wrap: wrap;margin-bottom: 16px;}.filter-row:last-child {margin-bottom: 0;}.filter-row select, .filter-row input[type='text'] {box-sizing: border-box;height: 44px;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size: 0.875rem;padding: 8px 12px;background: #fff4da;border: 3px solid #1a1a1a;border-radius: 4px;color: #1a1a1a;}.filter-row select {width: auto;font-weight: 600;}.filter-row input[type='text'] {flex: 1;min-width: 200px;}.filter-row-size {gap: 16px;}.filter-row-size label {font-weight: 500;}.filter-row input[type='range'] {flex: 1;min-width: 160px;max-width: 320px;accent-color: #ffc480;}.tree {font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size: 0.875rem;line-height: 1.5;padding: 12px;}.tree-line {padding: 1px 4px;white-space: pre;border-radius: 4px;}.tree-entry {cursor: pointer;}.tree-entry:hover {background: rgba(26, 26, 26, 0.08);}.tree-entry:focus-visible {outline: 2px solid #1a1a1a;outline-offset: -2px;}.tree-entry.is-excluded {text-decoration: line-through;opacity: 0.55;}.tree-entry.is-included {font-weight: 700;}
+body {font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;padding: 20px;color: #1a1a1a;line-height: 1.6;background-color: #FFFDF8;}.shadow-wrapper {position: relative;}.shadow-wrapper::before {content: '';position: absolute;inset: 0;background: #1a1a1a;border-radius: 12px;transform: translate(2px, 2px);z-index: 10;}.content-wrapper {background: #fafafa;border: 3px solid #1a1a1a;border-radius: 12px;padding: 24px;position: relative;z-index: 20;}.loading-container {display: flex;justify-content: center;align-items: center;min-height: 400px;}.loading-content {width: 100%;max-width: 500px;text-align: center;}.loader-wrapper {margin-bottom: 2rem;}.loading-title {font-size: 1.5rem;font-weight: 600;margin: 1rem 0;color: #1a1a1a;}.loader {border: 4px solid #fff4da;border-top: 4px solid #ffc480;border-radius: 50%;width: 60px;height: 60px;animation: spin 1s linear infinite;margin: 0 auto;}.status-container {margin: 2rem 0;}.status-item {display: flex;align-items: center;justify-content: center;gap: 0.75rem;padding: 0.75rem;margin-bottom: 0.75rem;border-radius: 8px;background: #fff4da;border: 2px solid #1a1a1a;font-size: 1rem;transition: transform 0.2s ease;}.status-item:hover {transform: translateY(-1px);}.status-item.success {color: #27ae60;}.status-item.error {color: ${theme.danger};}.status-item.warning {color: #f39c12;}.status-item.info {color: #3498db;}.status-icon {display: flex;align-items: center;}.status-text {font-weight: 500;}@keyframes spin {0% {transform: rotate(0deg);}100% {transform: rotate(360deg);}}.inner-content {background: #fff4da;border: 3px solid #1a1a1a;border-radius: 12px;padding: 24px;position: relative;}.grid {display: grid;grid-template-columns: 1fr 1fr;gap: 24px;margin-bottom: 24px;}@media (max-width: 768px) {.grid {grid-template-columns: 1fr;}}.section-title {font-size: 1.25rem;font-weight: bold;color: #1a1a1a;margin-bottom: 16px;}.section-header {display: flex;justify-content: space-between;align-items: center;margin-bottom: 16px;}button {padding: 12px 24px;cursor: pointer;border-radius: 8px;font-weight: 600;font-size: 1rem;transition: all 0.2s;position: relative;z-index: 20;display: inline-flex;align-items: center;gap: 0.5rem;}.primary-button {background-color: #ffc480;color: #1a1a1a;border: 3px solid #1a1a1a;}.primary-button:hover {transform: translate(-1px, -1px);}.primary-button:disabled, .danger-button:disabled {opacity: 0.55;cursor: not-allowed;transform: none;}.danger-button {background-color: ${theme.danger};color: white;border: 3px solid #1a1a1a;}.danger-button:hover {transform: translate(-1px, -1px);}.button-group {display: flex;gap: 12px;margin-top: 16px;}.section-shadow-wrapper {position: relative;margin-bottom: 16px;}.section-shadow-wrapper::before {content: '';position: absolute;inset: 0;background: #1a1a1a;border-radius: 8px;transform: translate(2px, 2px);z-index: 10;}.content-box {background: #fff4da;border: 3px solid #1a1a1a;border-radius: 8px;padding: 16px;position: relative;z-index: 20;display: flex;flex-direction: column;height: 100%;}textarea, input[type='number'], pre {font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size: 0.875rem;line-height: 1.5;padding: 12px;background: #fff4da;border: 3px solid #1a1a1a;border-radius: 4px;width: 100%;min-height: 150px;resize: vertical;white-space: pre-wrap;word-wrap: break-word;margin: 0;}.scrollable-content {position: relative;max-height: 300px;overflow-y: auto;overflow-x: hidden;border: 3px solid #1a1a1a;border-radius: 4px;background: #fff4da;}.scrollable-content pre {border: none;margin: 0;height: 100%;}.error-container {display: flex;justify-content: center;align-items: center;min-height: 400px;}.error-content {width: 100%;max-width: 500px;text-align: center;}.error-icon {color: ${theme.danger};margin-bottom: 1.5rem;}.error-title {font-size: 1.75rem;font-weight: 600;color: ${theme.danger};margin-bottom: 1.5rem;}.error-messages {margin: 2rem 0;}.error-message {display: flex;align-items: center;justify-content: center;gap: 0.75rem;padding: 0.75rem;margin-bottom: 0.75rem;border-radius: 8px;background: #fff4da;border: 2px solid #1a1a1a;font-size: 1rem;transition: transform 0.2s ease;}.error-message:hover {transform: translateY(-1px);}.error-message-icon {display: flex;align-items: center;color: ${theme.danger};}.error-message-text {font-weight: 500;color: #1a1a1a;}.error-actions {display: flex;gap: 1rem;justify-content: center;margin-top: 2rem;}.filter-row {display: flex;align-items: center;gap: 12px;flex-wrap: wrap;margin-bottom: 16px;}.filter-row:last-child {margin-bottom: 0;}.filter-row select, .filter-row input[type='text'] {box-sizing: border-box;height: 44px;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size: 0.875rem;padding: 8px 12px;background: #fff4da;border: 3px solid #1a1a1a;border-radius: 4px;color: #1a1a1a;}.filter-row select {width: auto;font-weight: 600;}.filter-row input[type='text'] {flex: 1;min-width: 200px;}.filter-row-size {gap: 16px;}.filter-row-size label {font-weight: 500;}.filter-row input[type='range'] {flex: 1;min-width: 160px;max-width: 320px;accent-color: #ffc480;}.tree {font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size: 0.875rem;line-height: 1.5;padding: 12px;}.tree-line {padding: 1px 4px;white-space: pre;border-radius: 4px;}.tree-entry {cursor: pointer;}.tree-entry:hover {background: rgba(26, 26, 26, 0.08);}.tree-entry:focus-visible {outline: 2px solid #1a1a1a;outline-offset: -2px;}.tree-entry.is-excluded {text-decoration: line-through;opacity: 0.55;}.tree-entry.is-included {font-weight: 700;}
 `;
 
 // Templates
@@ -157,6 +172,8 @@ export function getResultsContent(
     filters?: ResultFilters,
 ): string {
     const ingestedPathTrimmed = ingestedPath?.trim() ?? '';
+    const reIngestUnavailableReason = filters?.reIngestUnavailableReason;
+    const reIngestBlocked = Boolean(reIngestUnavailableReason);
     const filterPanel =
         ingestedPathTrimmed && filters ? FilterPanel(ingestedPathTrimmed, filters) : '';
     const reIngestButton =
@@ -165,7 +182,12 @@ export function getResultsContent(
                   onClick: 'reIngest()',
                   icon: icons.retry,
                   children: 'Re-Ingest',
-                  attrs: { 'data-path': escapeHtml(ingestedPathTrimmed) },
+                  disabled: reIngestBlocked,
+                  title: reIngestUnavailableReason,
+                  attrs: {
+                      'data-path': escapeHtml(ingestedPathTrimmed),
+                      ...(reIngestBlocked ? { 'data-reingest-blocked': 'true' } : {}),
+                  },
               })
             : '';
     const buttonGroup = `<div class="button-group">${Button({ onClick: "copy('all')", icon: icons.copy, children: 'Copy All' })}${Button({ onClick: 'saveToFile()', icon: icons.save, children: 'Save to File' })}${Button({ onClick: 'openInEditor()', icon: icons.editor, children: 'Open in Editor' })}${reIngestButton}</div>`;
@@ -230,7 +252,7 @@ window.addEventListener('message', function (event) {
     paintTree();
 });
 function resetFilters() { const panel = panelEl(); if (!panel) { return; } panel.setAttribute('data-include', panel.getAttribute('data-default-include') || ''); panel.setAttribute('data-exclude', panel.getAttribute('data-default-exclude') || ''); document.getElementById('gi-patterns').value = panel.getAttribute('data-' + currentMode()) || ''; document.getElementById('gi-size').value = panel.getAttribute('data-default-size') || '0'; updateSizeLabel(); paintTree(); }
-function reIngest() { const panel = panelEl(); const fallback = document.querySelector('[data-path]'); const pathValue = panel ? panel.getAttribute('data-path') : fallback && fallback.getAttribute('data-path'); if (!pathValue) { return; } vscode.postMessage({ command: 'reIngest', path: pathValue, options: currentOptions() }); }
+function reIngest() { const panel = panelEl(); const fallback = document.querySelector('[data-path]'); const pathSource = panel || fallback; if (!pathSource || pathSource.getAttribute('data-reingest-blocked') === 'true') { return; } const pathValue = pathSource.getAttribute('data-path'); if (!pathValue) { return; } vscode.postMessage({ command: 'reIngest', path: pathValue, options: currentOptions() }); }
 function copy(section) { vscode.postMessage({ command: 'copy', section: section }); }
 function saveToFile() { vscode.postMessage({ command: 'saveToFile' }); }
 function openInEditor() { vscode.postMessage({ command: 'openInEditor' }); }

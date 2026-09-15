@@ -127,6 +127,13 @@ async function handleReIngestCommand(
     panel: vscode.WebviewPanel,
     message: WebviewMessage,
 ): Promise<void> {
+    const unavailableReason =
+        WebviewService.getPanelState(panel)?.filters.reIngestUnavailableReason;
+    if (unavailableReason) {
+        vscode.window.showWarningMessage(unavailableReason);
+        return;
+    }
+
     const pathTrimmed = typeof message.path === 'string' ? message.path.trim() : '';
     if (!pathTrimmed) {
         WebviewService.showError(panel, 'Re-Ingest Failed', [
