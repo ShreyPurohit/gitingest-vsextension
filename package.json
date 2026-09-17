@@ -2,7 +2,7 @@
     "name": "gitingest",
     "displayName": "Gitingest",
     "description": "Turn any repository into a simple text digest of its codebase.",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "publisher": "iamshreydxv",
     "engines": {
         "vscode": "^1.63.0"
@@ -67,7 +67,7 @@
                 "gitingest.deleteAfterIngest": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to delete the staged files and folders after running GitIngest.",
+                    "description": "Delete the Add to Ingest staging folder after you successfully analyze that staging folder. Analyzing any other folder leaves staging untouched.",
                     "scope": "resource"
                 },
                 "gitingest.includePatterns": {
@@ -134,7 +134,6 @@
         "eslint-plugin-prettier": "^5.2.1",
         "mocha": "^10.2.0",
         "npm-run-all": "^4.1.5",
-        "ovsx": "^1.2.0",
         "prettier": "^3.3.3",
         "typescript": "^5.6.3"
     },

@@ -5,6 +5,7 @@ import { AnalysisService, LAST_INGEST_OPTIONS_KEY } from './services/analysisSer
 import { WebviewService } from './services/webviewService';
 import { WorkspaceService } from './services/workspaceService';
 import { processManager } from './utils/processManager';
+import { readReIngestUnavailableReason } from './utils/reIngestAvailability';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     AnalysisService.setScriptPath(context);
@@ -91,6 +92,12 @@ async function handleAddToIngest(resourceUri: vscode.Uri): Promise<void> {
 }
 
 async function handleReIngest(context: vscode.ExtensionContext): Promise<void> {
+    const unavailableReason = readReIngestUnavailableReason(context);
+    if (unavailableReason) {
+        vscode.window.showWarningMessage(unavailableReason);
+        return;
+    }
+
     const lastPath = context.workspaceState.get<string>('gitingest.lastIngestedPath');
     if (!lastPath || typeof lastPath !== 'string' || lastPath.trim() === '') {
         vscode.window.showInformationMessage(
