@@ -55,10 +55,15 @@ export class WorkspaceService {
         }
     }
 
-    public static async addToIngest(resourceUri: vscode.Uri): Promise<void> {
+    public static async addToIngest(
+        resourceUri: vscode.Uri,
+        options?: { notify?: boolean },
+    ): Promise<'added' | 'skipped'> {
         if (!resourceUri) {
             throw new Error('No resource selected.');
         }
+
+        const notify = options?.notify !== false;
 
         const workspaceFolder =
             vscode.workspace.getWorkspaceFolder(resourceUri) ?? this.getWorkspaceFolder();
@@ -72,8 +77,10 @@ export class WorkspaceService {
         const rootPath = normalizePath(workspaceRoot.fsPath);
         const ingestPath = normalizePath(ingestRoot.fsPath);
         if (isSameOrChild(ingestPath, resourcePath)) {
-            vscode.window.showInformationMessage('Resource is already in the ingest folder.');
-            return;
+            if (notify) {
+                vscode.window.showInformationMessage('Resource is already in the ingest folder.');
+            }
+            return 'skipped';
         }
 
         const destinationInfo = resolveIngestDestination(
@@ -113,7 +120,59 @@ export class WorkspaceService {
         }
 
         const addedPath = path.relative(ingestRoot.fsPath, destination).split(path.sep).join('/');
-        vscode.window.showInformationMessage(`Added to ingest: ${addedPath}`);
+        if (notify) {
+            vscode.window.showInformationMessage(`Added to ingest: ${addedPath}`);
+        }
+        return 'added';
+    }
+
+    /** Stage many resources with a single summary notification. */
+    public static async addManyToIngest(resourceUris: readonly vscode.Uri[]): Promise<void> {
+        const unique = new Map<string, vscode.Uri>();
+        for (const uri of resourceUris) {
+            unique.set(uri.toString(), uri);
+        }
+        const uris = [...unique.values()];
+        if (uris.length === 0) {
+            throw new Error('No file or folder selected.');
+        }
+
+        let added = 0;
+        let skipped = 0;
+        let failed = 0;
+
+        for (const uri of uris) {
+            try {
+                const result = await this.addToIngest(uri, { notify: false });
+                if (result === 'added') {
+                    added += 1;
+                } else {
+                    skipped += 1;
+                }
+            } catch {
+                failed += 1;
+            }
+        }
+
+        if (added === 0 && failed === 0) {
+            vscode.window.showInformationMessage(
+                'Selected resources are already in the ingest folder.',
+            );
+            return;
+        }
+
+        if (failed > 0 && added === 0) {
+            throw new Error(`Failed to add ${failed} item${failed === 1 ? '' : 's'} to ingest.`);
+        }
+
+        const parts = [`Added ${added} item${added === 1 ? '' : 's'} to ingest`];
+        if (skipped > 0) {
+            parts.push(`${skipped} already staged`);
+        }
+        if (failed > 0) {
+            parts.push(`${failed} failed`);
+        }
+        vscode.window.showInformationMessage(`${parts.join('; ')}.`);
     }
 
     /** Open the digest as an unsaved editor tab instead of writing a file to the workspace. */

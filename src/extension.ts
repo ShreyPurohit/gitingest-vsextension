@@ -6,22 +6,25 @@ import { WebviewService } from './services/webviewService';
 import { WorkspaceService } from './services/workspaceService';
 import { processManager } from './utils/processManager';
 import { readReIngestUnavailableReason } from './utils/reIngestAvailability';
+import { urisFromScmMenuArgs } from './utils/scmGroupResources';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     AnalysisService.setScriptPath(context);
     AnalysisService.setContext(context);
     WorkspaceService.setContext(context);
 
-    const commands = registerCommands(context);
-
-    context.subscriptions.push(...commands);
+    context.subscriptions.push(...registerCommands(context));
 }
 
 function registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
     return [
         vscode.commands.registerCommand(COMMANDS.analyze, handleAnalyze),
-        vscode.commands.registerCommand(COMMANDS.analyzeFolder, handleAnalyzeFolder),
-        vscode.commands.registerCommand(COMMANDS.addToIngest, handleAddToIngest),
+        // Explorer / palette: VS Code passes a resource Uri.
+        vscode.commands.registerCommand(COMMANDS.analyzeFolder, runAnalyzeFolder),
+        vscode.commands.registerCommand(COMMANDS.addToIngest, runAddToIngest),
+        // SCM resource / folder / group menus share these entry points.
+        vscode.commands.registerCommand(COMMANDS.analyzeFolderFromScm, handleAnalyzeFolderFromScm),
+        vscode.commands.registerCommand(COMMANDS.addToIngestFromScm, handleAddToIngestFromScm),
         vscode.commands.registerCommand(COMMANDS.reIngest, () => handleReIngest(context)),
     ];
 }
@@ -50,13 +53,55 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
     }
 }
 
-async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
-    if (!folderUri) {
+/**
+ * Prefer a directory target. For files or missing paths, use the parent via
+ * `vscode.Uri.joinPath` (VS Code's URI path helper).
+ */
+async function resolveFolderTarget(resourceUri: vscode.Uri): Promise<vscode.Uri | undefined> {
+    try {
+        const stat = await vscode.workspace.fs.stat(resourceUri);
+        if ((stat.type & vscode.FileType.Directory) !== 0) {
+            return resourceUri;
+        }
+    } catch {
+        // Fall back to the parent folder for files or deleted SCM entries.
+    }
+
+    const parent = vscode.Uri.joinPath(resourceUri, '..');
+    if (parent.toString() === resourceUri.toString()) {
+        return undefined;
+    }
+
+    return parent;
+}
+
+async function handleAnalyzeFolderFromScm(
+    ...args: Array<vscode.SourceControlResourceState | vscode.SourceControlResourceGroup>
+): Promise<void> {
+    const uris = await urisFromScmMenuArgs(...args);
+    await runAnalyzeFolder(uris[0]);
+}
+
+async function handleAddToIngestFromScm(
+    ...args: Array<vscode.SourceControlResourceState | vscode.SourceControlResourceGroup>
+): Promise<void> {
+    const uris = await urisFromScmMenuArgs(...args);
+    await runAddManyToIngest(uris);
+}
+
+async function runAnalyzeFolder(resourceUri?: vscode.Uri): Promise<void> {
+    if (!resourceUri) {
         vscode.window.showErrorMessage('Invalid folder selected');
         return;
     }
 
-    const folderName = path.basename(folderUri.fsPath);
+    const targetUri = await resolveFolderTarget(resourceUri);
+    if (!targetUri) {
+        vscode.window.showErrorMessage('Invalid folder selected');
+        return;
+    }
+
+    const folderName = path.basename(targetUri.fsPath);
     const panel = WebviewService.createAnalysisPanel(`GitIngest: ${folderName}`);
 
     panel.onDidDispose(() => {
@@ -67,7 +112,7 @@ async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
         await AnalysisService.verifyDependencies(panel);
         await AnalysisService.analyze(
             panel,
-            folderUri.fsPath,
+            targetUri.fsPath,
             `Analyzing folder: ${folderName}...`,
         );
     } catch (error) {
@@ -76,7 +121,7 @@ async function handleAnalyzeFolder(folderUri: vscode.Uri): Promise<void> {
     }
 }
 
-async function handleAddToIngest(resourceUri: vscode.Uri): Promise<void> {
+async function runAddToIngest(resourceUri?: vscode.Uri): Promise<void> {
     if (!resourceUri) {
         vscode.window.showErrorMessage('No file or folder selected.');
         return;
@@ -87,6 +132,25 @@ async function handleAddToIngest(resourceUri: vscode.Uri): Promise<void> {
     } catch (error) {
         const message =
             error instanceof Error ? error.message : 'Failed to add the selected item to ingest.';
+        vscode.window.showErrorMessage(message);
+    }
+}
+
+async function runAddManyToIngest(resourceUris: vscode.Uri[]): Promise<void> {
+    if (resourceUris.length === 0) {
+        vscode.window.showErrorMessage('No file or folder selected.');
+        return;
+    }
+
+    try {
+        if (resourceUris.length === 1) {
+            await WorkspaceService.addToIngest(resourceUris[0]);
+            return;
+        }
+        await WorkspaceService.addManyToIngest(resourceUris);
+    } catch (error) {
+        const message =
+            error instanceof Error ? error.message : 'Failed to add the selected items to ingest.';
         vscode.window.showErrorMessage(message);
     }
 }

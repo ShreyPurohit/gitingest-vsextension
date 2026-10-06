@@ -89,7 +89,7 @@ GitIngest is a code editor extension that analyzes your entire codebase—Git re
 
 ### ⚡ **Seamless Integration**
 
-- Right-click context menus
+- Right-click menus in Explorer and Source Control
 - Command palette integration
 - No external dependencies
 - Instant results in webview
@@ -131,7 +131,7 @@ Before getting started, ensure you have:
 
 2. **🎯 Analyze Your First Repository**
     - Open any project folder in your editor
-    - Right-click on the folder in Explorer
+    - Right-click a folder in Explorer, or a changed file/folder in Source Control
     - Select **"GitIngest: Analyze This Folder"**
     - View results in the webview panel!
 
@@ -146,8 +146,8 @@ Before getting started, ensure you have:
 
 **Perfect for immediate analysis of any folder**
 
-1. Right-click on any folder in your editor Explorer
-2. Choose **"GitIngest: Analyze This Folder"** for immediate analysis
+1. Right-click a folder in Explorer, or a changed file/folder in Source Control
+2. Choose **"GitIngest: Analyze This Folder"** (from a file, GitIngest analyzes the parent folder)
 3. View results in the automatically opened webview panel
 
 </details>
@@ -163,8 +163,8 @@ Before getting started, ensure you have:
 
 **Ideal for large codebases where you only need specific parts analyzed**
 
-1. Right-click on files/folders while holding Ctrl/Cmd
-2. Select **"GitIngest: Add To Ingest"** for each item
+1. Right-click files/folders in Explorer or Source Control (Ctrl/Cmd for multi-select in Explorer), or right-click a Source Control group such as **Changes**
+2. Select **"GitIngest: Add To Ingest"** for each item (or for the whole group)
 3. Once you've selected all desired items, run the analysis
 4. Optionally enable auto-cleanup in settings
 

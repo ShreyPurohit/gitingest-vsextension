@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.7.2] - Source Control Context Menus
+
+Added
+
+- **Source Control** context menus for **Add to Ingest** and **Analyze This Folder** on Git files, folders, and group headers such as Changes ([#28](https://github.com/ShreyPurohit/gitingest-vsextension/issues/28)). Analyzing a file uses its parent folder.
+
+---
+
 ## [0.7.1] - Staging Cleanup & Re-Ingest Guarding
 
 Changed
