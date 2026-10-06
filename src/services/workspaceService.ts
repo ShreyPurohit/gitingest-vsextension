@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ERROR_MESSAGES } from '../config';
 import { AnalysisResultData } from '../types';
+import { resolveIngestBatchOutcome } from '../utils/ingestBatch';
 import { copyIntoIngest, findFreeName, IngestFileSystem } from '../utils/ingestCopy';
 import { isSameOrChild, normalizePath, resolveIngestDestination } from '../utils/ingestPaths';
 
@@ -154,25 +155,11 @@ export class WorkspaceService {
             }
         }
 
-        if (added === 0 && failed === 0) {
-            vscode.window.showInformationMessage(
-                'Selected resources are already in the ingest folder.',
-            );
-            return;
+        const outcome = resolveIngestBatchOutcome({ added, skipped, failed });
+        if (outcome.type === 'all-failed') {
+            throw new Error(outcome.message);
         }
-
-        if (failed > 0 && added === 0) {
-            throw new Error(`Failed to add ${failed} item${failed === 1 ? '' : 's'} to ingest.`);
-        }
-
-        const parts = [`Added ${added} item${added === 1 ? '' : 's'} to ingest`];
-        if (skipped > 0) {
-            parts.push(`${skipped} already staged`);
-        }
-        if (failed > 0) {
-            parts.push(`${failed} failed`);
-        }
-        vscode.window.showInformationMessage(`${parts.join('; ')}.`);
+        vscode.window.showInformationMessage(outcome.message);
     }
 
     /** Open the digest as an unsaved editor tab instead of writing a file to the workspace. */

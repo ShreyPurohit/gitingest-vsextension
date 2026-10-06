@@ -4,6 +4,7 @@ import { COMMANDS } from './config';
 import { AnalysisService, LAST_INGEST_OPTIONS_KEY } from './services/analysisService';
 import { WebviewService } from './services/webviewService';
 import { WorkspaceService } from './services/workspaceService';
+import { resolveFolderTarget } from './utils/folderTarget';
 import { processManager } from './utils/processManager';
 import { readReIngestUnavailableReason } from './utils/reIngestAvailability';
 import { urisFromScmMenuArgs } from './utils/scmGroupResources';
@@ -51,28 +52,6 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
     }
-}
-
-/**
- * Prefer a directory target. For files or missing paths, use the parent via
- * `vscode.Uri.joinPath` (VS Code's URI path helper).
- */
-async function resolveFolderTarget(resourceUri: vscode.Uri): Promise<vscode.Uri | undefined> {
-    try {
-        const stat = await vscode.workspace.fs.stat(resourceUri);
-        if ((stat.type & vscode.FileType.Directory) !== 0) {
-            return resourceUri;
-        }
-    } catch {
-        // Fall back to the parent folder for files or deleted SCM entries.
-    }
-
-    const parent = vscode.Uri.joinPath(resourceUri, '..');
-    if (parent.toString() === resourceUri.toString()) {
-        return undefined;
-    }
-
-    return parent;
 }
 
 async function handleAnalyzeFolderFromScm(

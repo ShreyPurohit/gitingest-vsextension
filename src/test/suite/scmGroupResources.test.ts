@@ -21,6 +21,49 @@ describe('scmGroupResources', () => {
         );
     });
 
+    it('dedupes URIs across resource states and groups', async () => {
+        const shared = vscode.Uri.file('/workspace/shared.ts');
+        const other = vscode.Uri.file('/workspace/other.ts');
+
+        const fromStates = await urisFromScmMenuArgs(
+            { resourceUri: shared },
+            { resourceUri: shared },
+            { resourceUri: other },
+        );
+        assert.strictEqual(fromStates.length, 2);
+
+        const fromGroups = await urisFromScmResourceGroups([
+            {
+                id: 'workingTree',
+                label: 'Changes',
+                resourceStates: [{ resourceUri: shared }],
+                dispose: () => undefined,
+            },
+            {
+                id: 'index',
+                label: 'Staged Changes',
+                resourceStates: [{ resourceUri: shared }, { resourceUri: other }],
+                dispose: () => undefined,
+            },
+        ]);
+        assert.strictEqual(fromGroups.length, 2);
+    });
+
+    it('returns an empty list for empty args and unknown empty groups', async () => {
+        assert.deepStrictEqual(await urisFromScmMenuArgs(), []);
+        assert.deepStrictEqual(
+            await urisFromScmResourceGroups([
+                {
+                    id: '',
+                    label: 'Empty',
+                    resourceStates: [],
+                    dispose: () => undefined,
+                },
+            ]),
+            [],
+        );
+    });
+
     it('urisFromScmMenuArgs reads resource states directly', async () => {
         const file = vscode.Uri.file('/workspace/file.ts');
         const uris = await urisFromScmMenuArgs({ resourceUri: file });

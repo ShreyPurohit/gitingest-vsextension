@@ -11,15 +11,20 @@ interface GitAPI {
     state: 'uninitialized' | 'initialized';
     onDidChangeState: vscode.Event<'uninitialized' | 'initialized'>;
     repositories: readonly GitRepository[];
+    getRepository(uri: vscode.Uri): GitRepository | null;
+}
+
+interface GitChange {
+    uri: vscode.Uri;
 }
 
 interface GitRepository {
     rootUri: vscode.Uri;
     state: {
-        workingTreeChanges: readonly { uri: vscode.Uri }[];
-        indexChanges: readonly { uri: vscode.Uri }[];
-        mergeChanges: readonly { uri: vscode.Uri }[];
-        untrackedChanges?: readonly { uri: vscode.Uri }[];
+        workingTreeChanges: readonly GitChange[];
+        indexChanges: readonly GitChange[];
+        mergeChanges: readonly GitChange[];
+        untrackedChanges?: readonly GitChange[];
     };
 }
 
@@ -53,33 +58,69 @@ function sameFsPath(left: vscode.Uri, right: vscode.Uri): boolean {
     );
 }
 
+function changesForGroup(repository: GitRepository, groupId: string): readonly GitChange[] {
+    const { state } = repository;
+    switch (groupId) {
+        case 'workingTree':
+            return state.workingTreeChanges;
+        case 'index':
+            return state.indexChanges;
+        case 'merge':
+            return state.mergeChanges;
+        case 'untracked':
+            return state.untrackedChanges ?? [];
+        default:
+            return [];
+    }
+}
+
 /**
- * Prefer the repo for the active editor / first workspace folder so multi-root
- * workspaces do not stage every repository's Changes group.
+ * Pick repositories for a Git SCM group when `resourceStates` is unavailable.
+ * Prefer getRepository(hint), then the single repo that has changes for that group.
+ * Never merge changes from unrelated multi-root repositories when ambiguous.
  */
-function repositoriesForFallback(api: GitAPI): readonly GitRepository[] {
+function repositoriesForFallback(api: GitAPI, groupId: string): readonly GitRepository[] {
     if (api.repositories.length <= 1) {
         return api.repositories;
     }
 
     const hintUri =
         vscode.window.activeTextEditor?.document.uri ?? vscode.workspace.workspaceFolders?.[0]?.uri;
-    if (!hintUri) {
-        return api.repositories;
+
+    if (hintUri) {
+        try {
+            const hinted = api.getRepository(hintUri);
+            if (hinted) {
+                return [hinted];
+            }
+        } catch {
+            // Older / partial Git API surfaces may not expose getRepository.
+        }
+
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(hintUri);
+        const target = workspaceFolder?.uri ?? hintUri;
+        const pathMatched = api.repositories.filter(
+            (repository) =>
+                sameFsPath(repository.rootUri, target) ||
+                target.fsPath
+                    .replace(/\\/g, '/')
+                    .toLowerCase()
+                    .startsWith(`${repository.rootUri.fsPath.replace(/\\/g, '/').toLowerCase()}/`),
+        );
+        if (pathMatched.length === 1) {
+            return pathMatched;
+        }
     }
 
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(hintUri);
-    const target = workspaceFolder?.uri ?? hintUri;
-    const matched = api.repositories.filter(
-        (repository) =>
-            sameFsPath(repository.rootUri, target) ||
-            target.fsPath
-                .replace(/\\/g, '/')
-                .toLowerCase()
-                .startsWith(`${repository.rootUri.fsPath.replace(/\\/g, '/').toLowerCase()}/`),
+    const withChanges = api.repositories.filter(
+        (repository) => changesForGroup(repository, groupId).length > 0,
     );
+    if (withChanges.length === 1) {
+        return withChanges;
+    }
 
-    return matched.length > 0 ? matched : api.repositories;
+    // Ambiguous multi-root: refuse to combine unrelated repos.
+    return [];
 }
 
 function gitApiReady(api: GitAPI): boolean {
@@ -124,27 +165,10 @@ async function getGitApi(): Promise<GitAPI | undefined> {
     return gitApiReady(api) ? api : undefined;
 }
 
-/** Map built-in Git resource-group ids to repository change lists. */
 function urisFromGitGroupId(api: GitAPI, groupId: string): vscode.Uri[] {
     const uris: vscode.Uri[] = [];
-    for (const repository of repositoriesForFallback(api)) {
-        const { state } = repository;
-        switch (groupId) {
-            case 'workingTree':
-                uris.push(...state.workingTreeChanges.map((change) => change.uri));
-                break;
-            case 'index':
-                uris.push(...state.indexChanges.map((change) => change.uri));
-                break;
-            case 'merge':
-                uris.push(...state.mergeChanges.map((change) => change.uri));
-                break;
-            case 'untracked':
-                uris.push(...(state.untrackedChanges ?? []).map((change) => change.uri));
-                break;
-            default:
-                break;
-        }
+    for (const repository of repositoriesForFallback(api, groupId)) {
+        uris.push(...changesForGroup(repository, groupId).map((change) => change.uri));
     }
     return uris;
 }
