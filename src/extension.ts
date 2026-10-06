@@ -5,9 +5,11 @@ import { AnalysisService, LAST_INGEST_OPTIONS_KEY } from './services/analysisSer
 import { WebviewService } from './services/webviewService';
 import { WorkspaceService } from './services/workspaceService';
 import { resolveFolderTarget } from './utils/folderTarget';
+import { OsUtils } from './utils/osUtils';
 import { processManager } from './utils/processManager';
 import { readReIngestUnavailableReason } from './utils/reIngestAvailability';
 import { urisFromScmMenuArgs } from './utils/scmGroupResources';
+import { toGlobPattern } from './utils/treeParser';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     AnalysisService.setScriptPath(context);
@@ -55,10 +57,56 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
 }
 
 async function handleAnalyzeFolderFromScm(
-    ...args: Array<vscode.SourceControlResourceState | vscode.SourceControlResourceGroup>
+    ...resourceStates: vscode.SourceControlResourceState[]
 ): Promise<void> {
-    const uris = await urisFromScmMenuArgs(...args);
-    await runAnalyzeFolder(uris[0]);
+    const uris = await urisFromScmMenuArgs(...resourceStates);
+    if (uris.length === 0) {
+        vscode.window.showErrorMessage('Invalid folder selected');
+        return;
+    }
+
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uris[0]);
+    if (!workspaceFolder) {
+        vscode.window.showErrorMessage('Invalid folder selected');
+        return;
+    }
+
+    for (const uri of uris) {
+        const folder = vscode.workspace.getWorkspaceFolder(uri);
+        if (!folder || folder.uri.toString() !== workspaceFolder.uri.toString()) {
+            vscode.window.showErrorMessage('Invalid folder selected');
+            return;
+        }
+    }
+
+    // Digest only the selected changes: workspace-relative include globs.
+    const includePatterns: string[] = [];
+    const seen = new Set<string>();
+    for (const uri of uris) {
+        const relative = OsUtils.normalizePath(vscode.workspace.asRelativePath(uri, false));
+        if (!relative || relative === uri.fsPath) {
+            continue;
+        }
+
+        const folderTarget = await resolveFolderTarget(uri);
+        const pattern = toGlobPattern(relative, folderTarget?.toString() === uri.toString());
+        if (!pattern || seen.has(pattern)) {
+            continue;
+        }
+        seen.add(pattern);
+        includePatterns.push(pattern);
+    }
+
+    if (includePatterns.length === 0) {
+        vscode.window.showErrorMessage('Invalid folder selected');
+        return;
+    }
+
+    const baseOptions = AnalysisService.resolveIngestOptions(workspaceFolder.uri.fsPath);
+    await analyzeResolvedFolder(workspaceFolder.uri, {
+        ...baseOptions,
+        includePatterns,
+    });
 }
 
 async function handleAddToIngestFromScm(
@@ -69,12 +117,14 @@ async function handleAddToIngestFromScm(
 }
 
 async function runAnalyzeFolder(resourceUri?: vscode.Uri): Promise<void> {
-    if (!resourceUri) {
-        vscode.window.showErrorMessage('Invalid folder selected');
-        return;
-    }
+    const targetUri = resourceUri ? await resolveFolderTarget(resourceUri) : undefined;
+    await analyzeResolvedFolder(targetUri);
+}
 
-    const targetUri = await resolveFolderTarget(resourceUri);
+async function analyzeResolvedFolder(
+    targetUri?: vscode.Uri,
+    optionsOverride?: unknown,
+): Promise<void> {
     if (!targetUri) {
         vscode.window.showErrorMessage('Invalid folder selected');
         return;
@@ -93,6 +143,7 @@ async function runAnalyzeFolder(resourceUri?: vscode.Uri): Promise<void> {
             panel,
             targetUri.fsPath,
             `Analyzing folder: ${folderName}...`,
+            optionsOverride,
         );
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

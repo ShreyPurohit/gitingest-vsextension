@@ -127,8 +127,12 @@ export class WorkspaceService {
         return 'added';
     }
 
-    /** Stage many resources with a single summary notification. */
-    public static async addManyToIngest(resourceUris: readonly vscode.Uri[]): Promise<void> {
+    /** Stage many resources with a single summary notification (unless `notify: false`). */
+    public static async addManyToIngest(
+        resourceUris: readonly vscode.Uri[],
+        options?: { notify?: boolean },
+    ): Promise<void> {
+        const notify = options?.notify !== false;
         const unique = new Map<string, vscode.Uri>();
         for (const uri of resourceUris) {
             unique.set(uri.toString(), uri);
@@ -159,7 +163,9 @@ export class WorkspaceService {
         if (outcome.type === 'all-failed') {
             throw new Error(outcome.message);
         }
-        vscode.window.showInformationMessage(outcome.message);
+        if (notify) {
+            vscode.window.showInformationMessage(outcome.message);
+        }
     }
 
     /** Open the digest as an unsaved editor tab instead of writing a file to the workspace. */

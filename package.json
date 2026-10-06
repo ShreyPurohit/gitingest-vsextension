@@ -96,11 +96,6 @@
             ],
             "scm/resourceGroup/context": [
                 {
-                    "command": "vscode-gitingest.analyzeFolderFromScm",
-                    "when": "scmProvider == git",
-                    "group": "1_gitingest"
-                },
-                {
                     "command": "vscode-gitingest.addToIngestFromScm",
                     "when": "scmProvider == git",
                     "group": "1_gitingest"

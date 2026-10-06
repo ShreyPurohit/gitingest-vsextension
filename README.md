@@ -132,7 +132,7 @@ Before getting started, ensure you have:
 
 2. **🎯 Analyze Your First Repository**
     - Open any project folder in your editor
-    - Right-click a folder in Explorer, or a changed file/folder in Source Control
+    - Right-click a folder in Explorer, or changed files/folders in Source Control
     - Select **"GitIngest: Analyze This Folder"**
     - View results in the webview panel!
 
@@ -147,8 +147,8 @@ Before getting started, ensure you have:
 
 **Perfect for immediate analysis of any folder**
 
-1. Right-click a folder in Explorer, or a changed file/folder in Source Control
-2. Choose **"GitIngest: Analyze This Folder"** (from a file, or from a Source Control group such as Changes, GitIngest analyzes the parent of the first item)
+1. Right-click a folder in Explorer, or changed files/folders in Source Control
+2. Choose **"GitIngest: Analyze This Folder"** — Explorer digests the full folder; Source Control digests only the selected changes
 3. View results in the automatically opened webview panel
 
 </details>
@@ -164,9 +164,9 @@ Before getting started, ensure you have:
 
 **Ideal for large codebases where you only need specific parts analyzed**
 
-1. Right-click files/folders in Explorer or Source Control (Ctrl/Cmd for multi-select in Explorer), or right-click a Source Control group such as **Changes**
-2. Select **"GitIngest: Add To Ingest"** for each item (or for the whole group)
-3. Once you've selected all desired items, run the analysis
+1. Right-click files/folders in Explorer or Source Control (Ctrl/Cmd for multi-select in Explorer), or right-click a Source Control group such as **Changes** and choose **Add to Ingest**
+2. Select **"GitIngest: Add To Ingest"** for each item (groups stage every change in that group)
+3. Once you've selected all desired items, run **"GitIngest: Analyze This Folder"** on the ingest folder (or analyze another folder as needed)
 4. Optionally enable auto-cleanup in settings
 
 Staged items keep their location: `src/utils/helpers/example.ts` is staged as
