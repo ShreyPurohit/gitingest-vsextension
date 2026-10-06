@@ -32,7 +32,6 @@ describe('Extension', () => {
         for (const cmd of gitingestCommands) {
             assert.ok(commands.includes(cmd), `Command ${cmd} should be registered`);
         }
-        assert.ok(!commands.includes('vscode-gitingest.addGroupToIngestFromScm'));
     });
 
     it('wires Explorer and Source Control to typed command entry points', () => {

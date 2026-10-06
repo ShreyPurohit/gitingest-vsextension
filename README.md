@@ -7,6 +7,7 @@ _Deep insights, modern UI, and effortless integration into your workflow._
 [![Open VSX Version](https://img.shields.io/open-vsx/v/iamshreydxv/gitingest?label=Open%20VSX)](https://open-vsx.org/extension/iamshreydxv/gitingest)
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/iamshreydxv/gitingest?label=Downloads)](https://open-vsx.org/extension/iamshreydxv/gitingest)
 [![CI](https://github.com/ShreyPurohit/gitingest-vsextension/actions/workflows/ci.yml/badge.svg)](https://github.com/ShreyPurohit/gitingest-vsextension/actions/workflows/ci.yml)
+[![Star Me](https://img.shields.io/github/stars/ShreyPurohit/gitingest-vsextension?style=social&label=Star%20Me)](https://github.com/ShreyPurohit/gitingest-vsextension)
 
 </div>
 
@@ -147,7 +148,7 @@ Before getting started, ensure you have:
 **Perfect for immediate analysis of any folder**
 
 1. Right-click a folder in Explorer, or a changed file/folder in Source Control
-2. Choose **"GitIngest: Analyze This Folder"** (from a file, GitIngest analyzes the parent folder)
+2. Choose **"GitIngest: Analyze This Folder"** (from a file, or from a Source Control group such as Changes, GitIngest analyzes the parent of the first item)
 3. View results in the automatically opened webview panel
 
 </details>
