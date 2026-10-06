@@ -8,12 +8,13 @@ All notable changes to this project will be documented in this file.
 
 Added
 
-- **Source Control** context menus ([#28](https://github.com/ShreyPurohit/gitingest-vsextension/issues/28)): **Add to Ingest** and **Analyze This Folder** on Git files and folders in the Source Control view.
-- **Add to Ingest** on SCM group headers such as Changes, so a selective digest can be staged and then analyzed from the ingest folder.
+- **Source Control menus** ([#28](https://github.com/ShreyPurohit/gitingest-vsextension/issues/28)): right-click Git changes in the Source Control view to run **Add to Ingest** or **Analyze This Folder** — on individual files, folder nodes, and group headers such as **Changes** / **Staged**.
+- **Analyze changes in place:** from Source Control, **Analyze This Folder** digests only the selected changes (not the whole project folder). Right-click **Changes** to analyze every pending change in one step.
+- **Add to Ingest from groups:** stage an entire SCM group into the ingest folder when you want a selective digest mixed with Explorer picks.
 
 Changed
 
-- **Analyze This Folder** from Source Control digests only the selected changes (workspace-relative include filters), not the entire folder on disk. Explorer analyze still digests the full folder.
+- Explorer **Analyze This Folder** still digests the full folder on disk; Source Control analyze stays scoped to the changes you selected.
 
 ---
 

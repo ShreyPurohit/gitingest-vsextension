@@ -45,7 +45,11 @@ describe('Extension', () => {
         assert.ok(explorerCommands.includes('vscode-gitingest.analyzeFolder'));
         assert.ok(explorerCommands.includes('vscode-gitingest.addToIngest'));
 
-        for (const menuId of ['scm/resourceState/context', 'scm/resourceFolder/context']) {
+        for (const menuId of [
+            'scm/resourceState/context',
+            'scm/resourceFolder/context',
+            'scm/resourceGroup/context',
+        ]) {
             const entries = menus[menuId] ?? [];
             const commands = entries.map((entry: { command?: string }) => entry.command);
             assert.ok(
@@ -59,15 +63,6 @@ describe('Extension', () => {
             for (const entry of entries) {
                 assert.strictEqual(entry.when, 'scmProvider == git');
             }
-        }
-
-        // Groups (Changes / Staged / …) are not folders — only Add to Ingest belongs here.
-        const groupEntries = menus['scm/resourceGroup/context'] ?? [];
-        const groupCommands = groupEntries.map((entry: { command?: string }) => entry.command);
-        assert.ok(groupCommands.includes('vscode-gitingest.addToIngestFromScm'));
-        assert.ok(!groupCommands.includes('vscode-gitingest.analyzeFolderFromScm'));
-        for (const entry of groupEntries) {
-            assert.strictEqual(entry.when, 'scmProvider == git');
         }
 
         const palette = menus.commandPalette ?? [];

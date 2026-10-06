@@ -164,7 +164,7 @@ Before getting started, ensure you have:
 
 **Ideal for large codebases where you only need specific parts analyzed**
 
-1. Right-click files/folders in Explorer or Source Control (Ctrl/Cmd for multi-select in Explorer), or right-click a Source Control group such as **Changes** and choose **Add to Ingest**
+1. Right-click files/folders in Explorer or Source Control (Ctrl/Cmd for multi-select in Explorer), or right-click a Source Control group such as **Changes** and choose **Add to Ingest** (or **Analyze This Folder** on Changes to digest those changes directly)
 2. Select **"GitIngest: Add To Ingest"** for each item (groups stage every change in that group)
 3. Once you've selected all desired items, run **"GitIngest: Analyze This Folder"** on the ingest folder (or analyze another folder as needed)
 4. Optionally enable auto-cleanup in settings

@@ -57,9 +57,9 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
 }
 
 async function handleAnalyzeFolderFromScm(
-    ...resourceStates: vscode.SourceControlResourceState[]
+    ...args: Array<vscode.SourceControlResourceState | vscode.SourceControlResourceGroup>
 ): Promise<void> {
-    const uris = await urisFromScmMenuArgs(...resourceStates);
+    const uris = await urisFromScmMenuArgs(...args);
     if (uris.length === 0) {
         vscode.window.showErrorMessage('Invalid folder selected');
         return;
