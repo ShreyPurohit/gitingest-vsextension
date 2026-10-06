@@ -14,6 +14,9 @@ export const COMMANDS = {
     analyze: 'vscode-gitingest.analyze',
     analyzeFolder: 'vscode-gitingest.analyzeFolder',
     addToIngest: 'vscode-gitingest.addToIngest',
+    /** SCM menus: dedicated entry points (resource state/folder/group). */
+    analyzeFolderFromScm: 'vscode-gitingest.analyzeFolderFromScm',
+    addToIngestFromScm: 'vscode-gitingest.addToIngestFromScm',
     reIngest: 'vscode-gitingest.reIngest',
 } as const;
 
