@@ -8,6 +8,8 @@ export default defineConfig({
                 ui: 'bdd',
                 timeout: 10000,
             },
+            // Pin to a cached Electron build so local/CI runs don't re-download latest.
+            version: '1.140.0',
             // Reduce D-Bus/GPU noise and improve stability in headless CI (e.g. GitHub Actions)
             launchArgs: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
             srcDir: 'src',

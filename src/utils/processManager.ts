@@ -14,12 +14,20 @@ class ProcessManager {
     }
 
     async killCurrentProcess(): Promise<void> {
-        if (!this.currentProcess?.pid) {
+        const child = this.currentProcess;
+        if (!child?.pid) {
             return;
         }
 
         try {
-            await OsUtils.killProcess(this.currentProcess.pid);
+            if (OsUtils.isWindows()) {
+                // Windows: child.kill() does not reap the whole process tree
+                // (the spawned python may have grandchildren), so use taskkill /T.
+                await OsUtils.killProcessTree(child.pid);
+            } else {
+                // POSIX: a direct signal reaps the child without spawning a shell.
+                child.kill('SIGKILL');
+            }
             this.currentProcess = null;
         } catch (error) {
             console.error(ERROR_MESSAGES.PROCESS_KILL_FAILED, error);

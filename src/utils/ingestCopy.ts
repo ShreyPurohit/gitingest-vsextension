@@ -1,21 +1,5 @@
 import * as path from 'path';
-
-/** One entry of a directory listing. */
-export interface IngestDirectoryEntry {
-    name: string;
-    isDirectory: boolean;
-}
-
-/**
- * The filesystem operations staging needs. `WorkspaceService` backs this with
- * `vscode.workspace.fs`; tests back it with an in-memory fake.
- */
-export interface IngestFileSystem {
-    exists(targetPath: string): Promise<boolean>;
-    readDirectory(directoryPath: string): Promise<IngestDirectoryEntry[]>;
-    createDirectory(directoryPath: string): Promise<void>;
-    copy(sourcePath: string, destinationPath: string): Promise<void>;
-}
+import { IngestFileSystem } from '../types';
 
 /**
  * First free name for `name` under `parent`, adding " (1)", " (2)", … before the

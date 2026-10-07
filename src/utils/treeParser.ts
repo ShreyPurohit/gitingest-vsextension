@@ -1,14 +1,4 @@
-/** One rendered line of the gitingest directory tree. */
-export interface TreeRow {
-    /** The original line, so the rendered tree still looks like the raw output. */
-    text: string;
-    /**
-     * Path relative to the ingested root, or undefined when the line is not an
-     * actionable entry (headers, blank lines, the root itself).
-     */
-    path?: string;
-    isDirectory: boolean;
-}
+import { TreeRow } from '../types';
 
 const ENTRY_PATTERN = /^([\s│|]*)(?:├──|└──|\|--|`--)\s(.*)$/;
 const INDENT_WIDTH = 4;

@@ -56,7 +56,7 @@ async function handleAnalyzeCommand(panel: vscode.WebviewPanel): Promise<void> {
         await AnalysisService.verifyDependencies(panel);
         await AnalysisService.analyze(panel, workspaceFolder.uri.fsPath, 'Analyzing repository...');
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
         WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
     }
 }
@@ -158,7 +158,7 @@ async function handleReIngestCommand(
             message.options,
         );
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
         WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);
     }
 }

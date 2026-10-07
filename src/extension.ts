@@ -1,15 +1,58 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { COMMANDS } from './config';
-import { AnalysisService, LAST_INGEST_OPTIONS_KEY } from './services/analysisService';
+import { COMMANDS, ERROR_MESSAGES, LAST_INGEST_OPTIONS_KEY } from './config';
+import { AnalysisService } from './services/analysisService';
 import { WebviewService } from './services/webviewService';
 import { WorkspaceService } from './services/workspaceService';
 import { resolveFolderTarget } from './utils/folderTarget';
 import { OsUtils } from './utils/osUtils';
 import { processManager } from './utils/processManager';
 import { readReIngestUnavailableReason } from './utils/reIngestAvailability';
-import { urisFromScmMenuArgs } from './utils/scmGroupResources';
+import {
+    changedFolderChoices,
+    filterUrisUnderRelativeFolder,
+    resolveScmSelection,
+} from './utils/scmGroupResources';
 import { toGlobPattern } from './utils/treeParser';
+
+/**
+ * Swallow a failed process-kill (best-effort cleanup). A named function keeps
+ * `.catch(...)` valid even when esbuild's production `drop: ['console']` removes
+ * the log — a bare `.catch(console.error)` would become `.catch(undefined)` and
+ * surface as an unhandled rejection.
+ */
+function logKillFailure(error: unknown): void {
+    console.error(ERROR_MESSAGES.PROCESS_KILL_FAILED, error);
+}
+
+/**
+ * Fallback folder scoping for editors that pass an un-revived SCM handle (Kiro —
+ * docs/KIRO-SCM-BUG.md): we have the whole group's changes but not which folder
+ * was clicked. Offer a QuickPick of the changed folders so the user still gets
+ * per-folder scoping. One folder or none → nothing to disambiguate, return as-is.
+ * Returns [] only when the user dismisses the picker.
+ */
+async function promptForScmFolderScope(groupUris: vscode.Uri[]): Promise<vscode.Uri[]> {
+    const folders = changedFolderChoices(groupUris);
+    if (folders.length <= 1) {
+        return groupUris;
+    }
+
+    const ALL = 'All changes';
+    const picked = await vscode.window.showQuickPick([ALL, ...folders], {
+        title: 'GitIngest: which changes to ingest?',
+        placeHolder:
+            'This editor did not report the clicked folder — pick a scope (or All changes)',
+    });
+
+    if (picked === undefined) {
+        return []; // dismissed
+    }
+    if (picked === ALL) {
+        return groupUris;
+    }
+    return filterUrisUnderRelativeFolder(groupUris, picked);
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     AnalysisService.setScriptPath(context);
@@ -38,7 +81,7 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
     }
 
     panel.onDidDispose(() => {
-        processManager.killCurrentProcess().catch(console.error);
+        processManager.killCurrentProcess().catch(logKillFailure);
     });
 
     try {
@@ -46,12 +89,12 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
         const workspaceFolder = WorkspaceService.getWorkspaceFolder();
 
         if (!workspaceFolder) {
-            throw new Error('No workspace folder is open');
+            throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
         }
 
         await AnalysisService.analyze(panel, workspaceFolder.uri.fsPath, 'Analyzing repository...');
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
         WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
     }
 }
@@ -59,22 +102,29 @@ async function handleAnalyze(panel?: vscode.WebviewPanel): Promise<void> {
 async function handleAnalyzeFolderFromScm(
     ...args: Array<vscode.SourceControlResourceState | vscode.SourceControlResourceGroup>
 ): Promise<void> {
-    const uris = await urisFromScmMenuArgs(...args);
-    if (uris.length === 0) {
-        vscode.window.showErrorMessage('Invalid folder selected');
+    const { uris: resolved, scopeResolved } = await resolveScmSelection(...args);
+    if (resolved.length === 0) {
+        vscode.window.showErrorMessage(ERROR_MESSAGES.SCM_UNRESOLVED);
         return;
+    }
+
+    // scopeResolved: clicked file/folder URI, or an intentional group header.
+    // Otherwise (un-revived marshalled handle — docs/KIRO-SCM-BUG.md) offer a picker.
+    const uris = scopeResolved ? resolved : await promptForScmFolderScope(resolved);
+    if (uris.length === 0) {
+        return; // user dismissed the picker
     }
 
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(uris[0]);
     if (!workspaceFolder) {
-        vscode.window.showErrorMessage('Invalid folder selected');
+        vscode.window.showErrorMessage(ERROR_MESSAGES.INVALID_FOLDER);
         return;
     }
 
     for (const uri of uris) {
         const folder = vscode.workspace.getWorkspaceFolder(uri);
         if (!folder || folder.uri.toString() !== workspaceFolder.uri.toString()) {
-            vscode.window.showErrorMessage('Invalid folder selected');
+            vscode.window.showErrorMessage(ERROR_MESSAGES.INVALID_FOLDER);
             return;
         }
     }
@@ -83,7 +133,7 @@ async function handleAnalyzeFolderFromScm(
     const includePatterns: string[] = [];
     const seen = new Set<string>();
     for (const uri of uris) {
-        const relative = OsUtils.normalizePath(vscode.workspace.asRelativePath(uri, false));
+        const relative = OsUtils.toPosixPath(vscode.workspace.asRelativePath(uri, false));
         if (!relative || relative === uri.fsPath) {
             continue;
         }
@@ -98,7 +148,7 @@ async function handleAnalyzeFolderFromScm(
     }
 
     if (includePatterns.length === 0) {
-        vscode.window.showErrorMessage('Invalid folder selected');
+        vscode.window.showErrorMessage(ERROR_MESSAGES.INVALID_FOLDER);
         return;
     }
 
@@ -112,7 +162,15 @@ async function handleAnalyzeFolderFromScm(
 async function handleAddToIngestFromScm(
     ...args: Array<vscode.SourceControlResourceState | vscode.SourceControlResourceGroup>
 ): Promise<void> {
-    const uris = await urisFromScmMenuArgs(...args);
+    const { uris: resolved, scopeResolved } = await resolveScmSelection(...args);
+    if (resolved.length === 0) {
+        vscode.window.showErrorMessage(ERROR_MESSAGES.SCM_UNRESOLVED);
+        return;
+    }
+    const uris = scopeResolved ? resolved : await promptForScmFolderScope(resolved);
+    if (uris.length === 0) {
+        return; // user dismissed the picker
+    }
     await runAddManyToIngest(uris);
 }
 
@@ -126,7 +184,7 @@ async function analyzeResolvedFolder(
     optionsOverride?: unknown,
 ): Promise<void> {
     if (!targetUri) {
-        vscode.window.showErrorMessage('Invalid folder selected');
+        vscode.window.showErrorMessage(ERROR_MESSAGES.INVALID_FOLDER);
         return;
     }
 
@@ -134,7 +192,7 @@ async function analyzeResolvedFolder(
     const panel = WebviewService.createAnalysisPanel(`GitIngest: ${folderName}`);
 
     panel.onDidDispose(() => {
-        processManager.killCurrentProcess().catch(console.error);
+        processManager.killCurrentProcess().catch(logKillFailure);
     });
 
     try {
@@ -146,7 +204,7 @@ async function analyzeResolvedFolder(
             optionsOverride,
         );
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
         WebviewService.showError(panel, 'Analysis Failed', [errorMessage]);
     }
 }
@@ -210,14 +268,14 @@ async function handleReIngest(context: vscode.ExtensionContext): Promise<void> {
     }
     const panel = WebviewService.createAnalysisPanel('GitIngest: Re-Ingest');
     panel.onDidDispose(() => {
-        processManager.killCurrentProcess().catch(console.error);
+        processManager.killCurrentProcess().catch(logKillFailure);
     });
     try {
         await AnalysisService.verifyDependencies(panel);
         const lastOptions = context.workspaceState.get<unknown>(LAST_INGEST_OPTIONS_KEY);
         await AnalysisService.analyze(panel, pathTrimmed, 'Re-analyzing folder...', lastOptions);
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR;
         WebviewService.showError(panel, 'Re-Ingest Failed', [errorMessage]);
     }
 }

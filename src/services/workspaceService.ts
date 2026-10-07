@@ -1,9 +1,9 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ERROR_MESSAGES } from '../config';
-import { AnalysisResultData } from '../types';
+import { AnalysisResultData, IngestFileSystem } from '../types';
 import { resolveIngestBatchOutcome } from '../utils/ingestBatch';
-import { copyIntoIngest, findFreeName, IngestFileSystem } from '../utils/ingestCopy';
+import { copyIntoIngest, findFreeName } from '../utils/ingestCopy';
 import { isSameOrChild, normalizePath, resolveIngestDestination } from '../utils/ingestPaths';
 
 export class WorkspaceService {

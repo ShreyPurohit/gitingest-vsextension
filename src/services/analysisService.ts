@@ -1,6 +1,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { DEFAULT_MAX_FILE_SIZE, ERROR_MESSAGES } from '../config';
+import {
+    DEFAULT_MAX_FILE_SIZE,
+    ERROR_MESSAGES,
+    LAST_INGEST_OPTIONS_KEY,
+    LAST_INGESTED_PATH_KEY,
+    VERIFIED_STATUS,
+} from '../config';
 import { AnalysisResult, IngestOptions, StatusMessage } from '../types';
 import { normalizeIngestOptions, serializeIngestOptions } from '../utils/ingestOptions';
 import { PythonHandler } from '../utils/pythonHandler';
@@ -10,9 +16,6 @@ import {
 } from '../utils/reIngestAvailability';
 import { WebviewService } from './webviewService';
 import { WorkspaceService } from './workspaceService';
-
-const LAST_INGESTED_PATH_KEY = 'gitingest.lastIngestedPath';
-export const LAST_INGEST_OPTIONS_KEY = 'gitingest.lastIngestOptions';
 
 export class AnalysisService {
     private static pythonHandler = PythonHandler.getInstance();
@@ -35,17 +38,13 @@ export class AnalysisService {
             throw new Error(ERROR_MESSAGES.NO_WORKSPACE);
         }
 
-        try {
-            await this.pythonHandler.verifyPythonInstallation();
-            statusMessages.push({ text: 'Python installation verified ✓', type: 'success' });
-            WebviewService.updateLoadingStatus(panel, statusMessages);
+        await this.pythonHandler.verifyPythonInstallation();
+        statusMessages.push(VERIFIED_STATUS[0]);
+        WebviewService.updateLoadingStatus(panel, statusMessages);
 
-            await this.pythonHandler.verifyGitIngest();
-            statusMessages.push({ text: 'GitIngest package verified ✓', type: 'success' });
-            WebviewService.updateLoadingStatus(panel, statusMessages);
-        } catch (error) {
-            throw error;
-        }
+        await this.pythonHandler.verifyGitIngest();
+        statusMessages.push(VERIFIED_STATUS[1]);
+        WebviewService.updateLoadingStatus(panel, statusMessages);
     }
 
     public static async analyze(
@@ -55,8 +54,7 @@ export class AnalysisService {
         optionsOverride?: unknown,
     ): Promise<void> {
         WebviewService.updateLoadingStatus(panel, [
-            { text: 'Python installation verified ✓', type: 'success' },
-            { text: 'GitIngest package verified ✓', type: 'success' },
+            ...VERIFIED_STATUS,
             { text: statusMessage, type: 'info' },
         ]);
 
@@ -169,8 +167,8 @@ export class AnalysisService {
 
     /**
      * Extract the JSON payload from stdout that may contain warnings or other noise.
-     * Looks for delimiters emitted by gitingest-script.py; falls back to raw output
-     * for backward compatibility.
+     * The script (gitingest-script.py) always wraps its JSON in these delimiters on a
+     * single code path, so a missing marker means the run produced no usable payload.
      */
     private static extractJsonPayload(output: string): string {
         const startMarker = '__GITINGEST_JSON_START__';
@@ -178,17 +176,10 @@ export class AnalysisService {
         const startIdx = output.indexOf(startMarker);
         const endIdx = output.indexOf(endMarker);
 
-        if (startIdx !== -1 && endIdx !== -1) {
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
             return output.substring(startIdx + startMarker.length, endIdx).trim();
         }
 
-        // Fallback: try to find the first { and last } for raw JSON
-        const firstBrace = output.indexOf('{');
-        const lastBrace = output.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace > firstBrace) {
-            return output.substring(firstBrace, lastBrace + 1);
-        }
-
-        return output;
+        throw new Error('GitIngest did not return a recognizable result payload.');
     }
 }

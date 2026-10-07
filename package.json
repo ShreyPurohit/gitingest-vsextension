@@ -2,7 +2,7 @@
     "name": "gitingest",
     "displayName": "Gitingest",
     "description": "Turn any repository into a simple text digest of its codebase.",
-    "version": "0.7.2",
+    "version": "0.7.3",
     "publisher": "iamshreydxv",
     "engines": {
         "vscode": "^1.63.0"
@@ -73,36 +73,36 @@
             "scm/resourceState/context": [
                 {
                     "command": "vscode-gitingest.analyzeFolderFromScm",
-                    "when": "scmProvider == git",
+                    "when": "scmProvider",
                     "group": "1_gitingest"
                 },
                 {
                     "command": "vscode-gitingest.addToIngestFromScm",
-                    "when": "scmProvider == git",
+                    "when": "scmProvider",
                     "group": "1_gitingest"
                 }
             ],
             "scm/resourceFolder/context": [
                 {
                     "command": "vscode-gitingest.analyzeFolderFromScm",
-                    "when": "scmProvider == git",
+                    "when": "scmProvider",
                     "group": "1_gitingest"
                 },
                 {
                     "command": "vscode-gitingest.addToIngestFromScm",
-                    "when": "scmProvider == git",
+                    "when": "scmProvider",
                     "group": "1_gitingest"
                 }
             ],
             "scm/resourceGroup/context": [
                 {
                     "command": "vscode-gitingest.analyzeFolderFromScm",
-                    "when": "scmProvider == git",
+                    "when": "scmProvider",
                     "group": "1_gitingest"
                 },
                 {
                     "command": "vscode-gitingest.addToIngestFromScm",
-                    "when": "scmProvider == git",
+                    "when": "scmProvider",
                     "group": "1_gitingest"
                 }
             ]
