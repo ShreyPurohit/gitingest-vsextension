@@ -37,16 +37,26 @@ export class OsUtils {
         return path.join(venvPath, binFolder, pythonExe);
     }
 
-    static async killProcess(pid: number): Promise<void> {
+    /**
+     * Force-kill a process TREE on Windows via taskkill /T, reaping grandchildren
+     * the plain ChildProcess.kill() leaves behind. POSIX callers should prefer
+     * child.kill('SIGKILL') directly (no shell spawn needed).
+     */
+    static async killProcessTree(pid: number): Promise<void> {
         if (this.isWindows()) {
             await execAsync(`taskkill /pid ${pid} /T /F`);
         } else {
-            // For both Linux and macOS
+            // Defensive: POSIX fallback if ever called without a ChildProcess handle.
             await execAsync(`kill -9 ${pid}`);
         }
     }
 
-    static normalizePath(filePath: string): string {
+    /**
+     * Normalize a path to forward slashes for glob/display use (NOT for splitting
+     * on path.sep). For filesystem-structure work that splits on the native
+     * separator, use `normalizePath` from `ingestPaths.ts` instead.
+     */
+    static toPosixPath(filePath: string): string {
         return path.normalize(filePath).replace(/\\/g, '/');
     }
 

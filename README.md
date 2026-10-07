@@ -151,6 +151,8 @@ Before getting started, ensure you have:
 2. Choose **"GitIngest: Analyze This Folder"** — Explorer digests the full folder; Source Control digests only the selected changes
 3. View results in the automatically opened webview panel
 
+> **Cross-editor note:** VS Code and Cursor hand the extension the exact file/folder you clicked in Source Control, so analysis is one click. Some editors (e.g. Kiro) don't resolve the clicked item for third-party extensions — there, GitIngest shows a quick **folder picker** built from your actual changes so you can still scope to one folder. See [`docs/KIRO-SCM-BUG.md`](./docs/KIRO-SCM-BUG.md) for details.
+
 </details>
 
 <div align="center">

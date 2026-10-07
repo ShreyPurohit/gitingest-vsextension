@@ -88,3 +88,56 @@ export interface SectionProps {
     /** Custom body markup, replacing the default <pre>. */
     body?: string;
 }
+
+/** Which filter list a tree-entry toggle targets. */
+export type FilterMode = 'include' | 'exclude';
+
+/** One entry of a directory listing used by the ingest staging helpers. */
+export interface IngestDirectoryEntry {
+    name: string;
+    isDirectory: boolean;
+}
+
+/**
+ * The filesystem operations staging needs. `WorkspaceService` backs this with
+ * `vscode.workspace.fs`; tests back it with an in-memory fake.
+ */
+export interface IngestFileSystem {
+    exists(targetPath: string): Promise<boolean>;
+    readDirectory(directoryPath: string): Promise<IngestDirectoryEntry[]>;
+    createDirectory(directoryPath: string): Promise<void>;
+    copy(sourcePath: string, destinationPath: string): Promise<void>;
+}
+
+/** Where a resource should be copied inside the ingest folder. */
+export interface IngestDestination {
+    /** Path segments, relative to the ingest root, that lead to the copied resource. */
+    segments: string[];
+    /** Workspace-relative path of the source, shown in user-facing messages. */
+    relativePath: string;
+}
+
+/** Tally of a multi-resource Add to Ingest run. */
+export type IngestBatchCounts = {
+    added: number;
+    skipped: number;
+    failed: number;
+};
+
+/** User-facing outcome of a multi-resource Add to Ingest run. */
+export type IngestBatchOutcome =
+    | { type: 'all-skipped'; message: string }
+    | { type: 'all-failed'; message: string }
+    | { type: 'summary'; message: string };
+
+/** One rendered line of the gitingest directory tree. */
+export interface TreeRow {
+    /** The original line, so the rendered tree still looks like the raw output. */
+    text: string;
+    /**
+     * Path relative to the ingested root, or undefined when the line is not an
+     * actionable entry (headers, blank lines, the root itself).
+     */
+    path?: string;
+    isDirectory: boolean;
+}

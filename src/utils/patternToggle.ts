@@ -1,6 +1,4 @@
-import { IngestOptions } from '../types';
-
-export type PatternMode = 'include' | 'exclude';
+import { FilterMode, IngestOptions } from '../types';
 
 /**
  * Toggle a directory-tree entry in the active filter list.
@@ -13,7 +11,7 @@ export type PatternMode = 'include' | 'exclude';
 export function togglePattern(
     options: IngestOptions,
     pattern: string,
-    mode: PatternMode,
+    mode: FilterMode,
 ): IngestOptions {
     const trimmed = pattern.trim();
     if (trimmed === '') {

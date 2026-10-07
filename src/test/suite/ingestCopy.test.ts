@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import { copyIntoIngest, IngestDirectoryEntry, IngestFileSystem } from '../../utils/ingestCopy';
+import { copyIntoIngest } from '../../utils/ingestCopy';
+import { IngestDirectoryEntry, IngestFileSystem } from '../../types';
 
 /**
  * In-memory stand-in for `vscode.workspace.fs`: directories are paths mapped to

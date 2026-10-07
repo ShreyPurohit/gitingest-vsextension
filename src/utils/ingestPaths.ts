@@ -1,12 +1,5 @@
 import * as path from 'path';
-
-/** Where a resource should be copied inside the ingest folder. */
-export interface IngestDestination {
-    /** Path segments, relative to the ingest root, that lead to the copied resource. */
-    segments: string[];
-    /** Workspace-relative path of the source, shown in user-facing messages. */
-    relativePath: string;
-}
+import { IngestDestination } from '../types';
 
 export function normalizePath(fsPath: string): string {
     return path.normalize(fsPath);

@@ -1,6 +1,4 @@
-import { IngestOptions } from '../types';
-
-export type FilterMode = 'include' | 'exclude';
+import { FilterMode, IngestOptions } from '../types';
 
 /**
  * Which list the filter row should show first after a run.

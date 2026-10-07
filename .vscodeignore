@@ -27,3 +27,5 @@ assets/*
 .prettierrc.json
 CONTRIBUTING.md
 package-lock.json
+.kiro
+docs/

@@ -6,3 +6,4 @@ coverage/
 *.vsix
 digest.txt
 .env
+.kiro

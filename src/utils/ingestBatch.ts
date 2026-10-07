@@ -1,14 +1,4 @@
-/** Outcome of staging multiple resources into the ingest folder. */
-export type IngestBatchCounts = {
-    added: number;
-    skipped: number;
-    failed: number;
-};
-
-export type IngestBatchOutcome =
-    | { type: 'all-skipped'; message: string }
-    | { type: 'all-failed'; message: string }
-    | { type: 'summary'; message: string };
+import { IngestBatchCounts, IngestBatchOutcome } from '../types';
 
 /** Build the user-facing result for a multi-resource Add to Ingest run. */
 export function resolveIngestBatchOutcome(counts: IngestBatchCounts): IngestBatchOutcome {

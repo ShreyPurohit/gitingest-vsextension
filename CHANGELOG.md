@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.7.3] — Cross-IDE Source Control Fix
+
+Fixed
+
+- Source Control actions now work correctly across VS Code, Cursor, Kiro, and other Open VSX editors.
+- Fixed an issue where clicking a specific file or folder under Changes or Staged could accidentally ingest all changes instead of just the selected item.
+
+Changed
+
+- If the editor can identify the selected file or folder, actions like Analyze This Folder and Add to Ingest work as expected with no extra steps.
+- In editors where the selected item cannot be identified reliably, a folder picker is now shown instead of guessing. This adds one extra click but ensures the correct files are ingested.
+
+---
+
 ## [0.7.2] - Source Control Context Menus
 
 Added

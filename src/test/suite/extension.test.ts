@@ -61,7 +61,8 @@ describe('Extension', () => {
                 `${menuId} should include Add to Ingest`,
             );
             for (const entry of entries) {
-                assert.strictEqual(entry.when, 'scmProvider == git');
+                // Provider-agnostic: any SCM host (VS Code, Cursor, Kiro, …), not only `git`.
+                assert.strictEqual(entry.when, 'scmProvider');
             }
         }
 

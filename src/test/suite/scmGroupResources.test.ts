@@ -1,6 +1,12 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { urisFromScmMenuArgs, urisFromScmResourceGroups } from '../../utils/scmGroupResources';
+import {
+    changedFolderChoices,
+    filterUrisUnderRelativeFolder,
+    resolveScmSelection,
+    urisFromScmMenuArgs,
+    urisFromScmResourceGroups,
+} from '../../utils/scmGroupResources';
 
 describe('scmGroupResources', () => {
     it('collects resourceStates from SCM groups when present', async () => {
@@ -81,5 +87,67 @@ describe('scmGroupResources', () => {
         });
         assert.strictEqual(uris.length, 1);
         assert.strictEqual(uris[0].fsPath, file.fsPath);
+    });
+
+    it('resolveScmSelection marks resource states as scoped', async () => {
+        const file = vscode.Uri.file('/workspace/src/a.ts');
+        const result = await resolveScmSelection({ resourceUri: file });
+        assert.strictEqual(result.scopeResolved, true);
+        assert.strictEqual(result.uris.length, 1);
+        assert.strictEqual(result.uris[0].fsPath, file.fsPath);
+    });
+
+    it('resolveScmSelection marks intentional group headers as scoped', async () => {
+        const first = vscode.Uri.file('/workspace/src/a.ts');
+        const second = vscode.Uri.file('/workspace/lib/b.ts');
+        const result = await resolveScmSelection({
+            id: 'workingTree',
+            label: 'Changes',
+            resourceStates: [{ resourceUri: first }, { resourceUri: second }],
+            dispose: () => undefined,
+        });
+        assert.strictEqual(result.scopeResolved, true);
+        assert.strictEqual(result.uris.length, 2);
+    });
+
+    it('resolveScmSelection leaves marshalled handles unscoped', async () => {
+        // Kiro-style un-revived ScmResource: no resourceUri / group fields.
+        const handle = {
+            $mid: 3,
+            groupHandle: 2,
+            handle: 1,
+            sourceControlHandle: 0,
+        } as unknown as vscode.SourceControlResourceGroup;
+
+        const result = await resolveScmSelection(handle);
+        assert.strictEqual(result.scopeResolved, false);
+    });
+
+    it('changedFolderChoices lists ancestor folders', () => {
+        const workspace = vscode.workspace.workspaceFolders?.[0];
+        if (!workspace) {
+            // Empty test host — skip without failing the suite.
+            return;
+        }
+
+        const left = vscode.Uri.joinPath(workspace.uri, 'src', 'services', 'a.ts');
+        const right = vscode.Uri.joinPath(workspace.uri, 'src', 'utils', 'b.ts');
+        const folders = changedFolderChoices([left, right]);
+        assert.ok(folders.includes('src'));
+        assert.ok(folders.includes('src/services'));
+        assert.ok(folders.includes('src/utils'));
+    });
+
+    it('filterUrisUnderRelativeFolder keeps only the chosen subtree', () => {
+        const workspace = vscode.workspace.workspaceFolders?.[0];
+        if (!workspace) {
+            return;
+        }
+
+        const left = vscode.Uri.joinPath(workspace.uri, 'src', 'services', 'a.ts');
+        const right = vscode.Uri.joinPath(workspace.uri, 'src', 'utils', 'b.ts');
+        const filtered = filterUrisUnderRelativeFolder([left, right], 'src/services');
+        assert.strictEqual(filtered.length, 1);
+        assert.strictEqual(filtered[0].toString(), left.toString());
     });
 });

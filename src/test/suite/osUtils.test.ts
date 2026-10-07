@@ -57,14 +57,14 @@ describe('OsUtils', () => {
         }
     });
 
-    it('normalizePath converts backslashes to forward slashes', () => {
+    it('toPosixPath converts backslashes to forward slashes', () => {
         const input = 'a\\b\\c';
-        const result = OsUtils.normalizePath(input);
+        const result = OsUtils.toPosixPath(input);
         assert.strictEqual(result, 'a/b/c');
     });
 
-    it('normalizePath normalizes path', () => {
-        const result = OsUtils.normalizePath('a/b/../c');
+    it('toPosixPath normalizes path', () => {
+        const result = OsUtils.toPosixPath('a/b/../c');
         assert.strictEqual(result, 'a/c');
     });
 

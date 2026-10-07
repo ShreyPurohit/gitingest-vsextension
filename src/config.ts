@@ -1,4 +1,4 @@
-import { ThemeColors } from './types';
+import { StatusMessage, ThemeColors } from './types';
 
 export const THEME: ThemeColors = {
     primary: '#3498db',
@@ -30,10 +30,22 @@ export const WEBVIEW_OPTIONS = {
     retainContextWhenHidden: true,
 } as const;
 
+/** workspaceState keys for the last analyzed folder and the options it ran with. */
+export const LAST_INGESTED_PATH_KEY = 'gitingest.lastIngestedPath';
+export const LAST_INGEST_OPTIONS_KEY = 'gitingest.lastIngestOptions';
+
+/** The two "verified" status lines, built once and reused by verify + analyze. */
+export const VERIFIED_STATUS: StatusMessage[] = [
+    { text: 'Python installation verified ✓', type: 'success' },
+    { text: 'GitIngest package verified ✓', type: 'success' },
+];
+
 export const ERROR_MESSAGES = {
     PYTHON_NOT_INSTALLED:
         'Python 3.x is not found. Please install Python 3.x and ensure it is added to your PATH, then try again.',
     NO_WORKSPACE: 'No workspace folder is open',
     PROCESS_KILL_FAILED: 'Failed to kill the analysis process',
     UNKNOWN_ERROR: 'An unknown error occurred',
+    INVALID_FOLDER: 'Invalid folder selected',
+    SCM_UNRESOLVED: 'GitIngest could not resolve the selected Source Control item in this editor.',
 } as const;
