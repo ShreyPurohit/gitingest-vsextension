@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.7.4] — Filename & Cross-Platform Fixes
+
+Fixed
+
+- Ingesting a folder of changes from Source Control now includes **every** selected file, even when a filename contains spaces or commas (e.g. `component copy.js`). Previously such files were silently skipped and only files with no spaces were analyzed.
+- Fixed the Source Control folder picker not appearing on Linux in cases where the selected changes could not be identified by the editor.
+
+---
+
 ## [0.7.3] — Cross-IDE Source Control Fix
 
 Fixed

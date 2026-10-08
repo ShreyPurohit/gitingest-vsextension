@@ -68,5 +68,19 @@ describe('treeParser', () => {
             assert.strictEqual(toGlobPattern('/src/', true), 'src/**');
             assert.strictEqual(toGlobPattern('', true), '');
         });
+
+        it('replaces separator chars with a wildcard so gitingest matches spaced/comma names', () => {
+            // gitingest splits include patterns on commas AND whitespace (/[,\s]+/),
+            // so `foo copy.js` becomes two patterns `foo` + `copy.js` and matches
+            // nothing. A `*` is not a separator and still matches the real char.
+            assert.strictEqual(
+                toGlobPattern('src/components/foo copy.js', false),
+                'src/components/foo*copy.js',
+            );
+            assert.strictEqual(toGlobPattern('src/my folder', true), 'src/my*folder/**');
+            // A run of mixed separators collapses to a single wildcard.
+            assert.strictEqual(toGlobPattern('a  b\tc.js', false), 'a*b*c.js');
+            assert.strictEqual(toGlobPattern('dir/a,b.js', false), 'dir/a*b.js');
+        });
     });
 });

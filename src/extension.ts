@@ -134,7 +134,7 @@ async function handleAnalyzeFolderFromScm(
     const seen = new Set<string>();
     for (const uri of uris) {
         const relative = OsUtils.toPosixPath(vscode.workspace.asRelativePath(uri, false));
-        if (!relative || relative === uri.fsPath) {
+        if (!relative || relative.startsWith('..') || OsUtils.isAbsolutePosixPath(relative)) {
             continue;
         }
 

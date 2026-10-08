@@ -39,9 +39,22 @@ export function parseTreeRows(tree: string): TreeRow[] {
     });
 }
 
-/** Glob pattern that matches a tree entry: directories match everything beneath them. */
+/**
+ * Glob pattern that matches a tree entry: directories match everything beneath them.
+ *
+ * gitingest SPLITS every include/exclude pattern on commas and whitespace
+ * (`re.compile(r"[,\s]+")` in its pattern_utils) before matching — it treats
+ * `foo bar.js` as the two separate patterns `foo` and `bar.js`, neither of which
+ * matches the real path, so a selected file whose name contains a space or comma
+ * is silently dropped from the digest. (Verified against the packaged engine's
+ * own `_parse_patterns`.) No in-pattern escaping survives that split, but a `*`
+ * is not a separator and still matches the original character, so we replace each
+ * run of separator characters with a single `*`. This is a no-op for ordinary
+ * paths and only marginally widens a separated one, which is fine for scoping an
+ * include to the selected changes.
+ */
 export function toGlobPattern(path: string, isDirectory: boolean): string {
-    const trimmed = path.replace(/^\/+|\/+$/g, '');
+    const trimmed = path.replace(/^\/+|\/+$/g, '').replace(/[,\s]+/g, '*');
     if (trimmed === '') {
         return '';
     }

@@ -2,7 +2,7 @@
     "name": "gitingest",
     "displayName": "Gitingest",
     "description": "Turn any repository into a simple text digest of its codebase.",
-    "version": "0.7.3",
+    "version": "0.7.4",
     "publisher": "iamshreydxv",
     "engines": {
         "vscode": "^1.63.0"
