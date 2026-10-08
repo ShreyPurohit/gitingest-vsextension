@@ -12,6 +12,10 @@ Fixed
 - Fixed the Source Control folder picker not appearing on Linux in cases where the selected changes could not be identified by the editor.
 - Fixed intermittent **Analysis Failed** (`Unterminated string in JSON`) when the digest itself contained the result framing marker (common when analyzing this extension’s own repo).
 
+Known limitation
+
+- Filenames with spaces or commas are matched via a wildcard workaround (`foo copy.js` → `foo*copy.js`) because gitingest’s public pattern API splits on commas and whitespace and provides no escape mechanism. That necessarily broadens the match slightly; it preserves the intended selected path in the common case while avoiding silent exclusion of those files.
+
 ---
 
 ## [0.7.3] — Cross-IDE Source Control Fix
