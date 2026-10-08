@@ -150,4 +150,29 @@ describe('scmGroupResources', () => {
         assert.strictEqual(filtered.length, 1);
         assert.strictEqual(filtered[0].toString(), left.toString());
     });
+
+    it('changedFolderChoices skips un-relativizable URIs but keeps in-workspace folders (Linux QuickPick regression)', () => {
+        const workspace = vscode.workspace.workspaceFolders?.[0];
+        if (!workspace) {
+            return;
+        }
+
+        // A file OUTSIDE every workspace folder: asRelativePath returns its
+        // absolute path unchanged. On Linux that path is forward-slashed, so the
+        // old `rel === uri.fsPath` guard silently collapsed the whole set and the
+        // QuickPick never appeared. The outside file must be skipped WITHOUT
+        // discarding the in-workspace folders.
+        const outside = vscode.Uri.file('/etc/some-other-repo/store/x.ts');
+        const inside = vscode.Uri.joinPath(workspace.uri, 'web-next-app', 'src', 'store', 'x.ts');
+
+        const folders = changedFolderChoices([outside, inside]);
+        assert.ok(
+            folders.includes('web-next-app/src/store'),
+            'in-workspace folder must survive alongside an un-relativizable URI',
+        );
+        assert.ok(
+            !folders.some((f) => f.startsWith('/') || /^[a-zA-Z]:\//.test(f)),
+            'no absolute path should leak into the folder choices',
+        );
+    });
 });

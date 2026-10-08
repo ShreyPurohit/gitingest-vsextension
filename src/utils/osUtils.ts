@@ -60,6 +60,15 @@ export class OsUtils {
         return path.normalize(filePath).replace(/\\/g, '/');
     }
 
+    /**
+     * True when a POSIX-form path is absolute (`/…` on POSIX, `C:/…` on Windows).
+     * Prefer this over comparing to `uri.fsPath` — that equality is slash-fragile
+     * across OSes after `toPosixPath`.
+     */
+    static isAbsolutePosixPath(posixPath: string): boolean {
+        return posixPath.startsWith('/') || /^[a-zA-Z]:\//.test(posixPath);
+    }
+
     static getPathSeparator(): string {
         return this.isWindows() ? '\\' : '/';
     }

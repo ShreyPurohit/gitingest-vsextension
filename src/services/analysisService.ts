@@ -8,6 +8,7 @@ import {
     VERIFIED_STATUS,
 } from '../config';
 import { AnalysisResult, IngestOptions, StatusMessage } from '../types';
+import { extractGitingestJsonPayload } from '../utils/gitingestPayload';
 import { normalizeIngestOptions, serializeIngestOptions } from '../utils/ingestOptions';
 import { PythonHandler } from '../utils/pythonHandler';
 import {
@@ -152,7 +153,7 @@ export class AnalysisService {
             const serialized = serializeIngestOptions(resolved);
             const args = serialized ? [pathTrimmed, serialized] : [pathTrimmed];
             const output = await this.pythonHandler.executeScriptWithProcess(this.scriptPath, args);
-            const jsonPayload = this.extractJsonPayload(output);
+            const jsonPayload = extractGitingestJsonPayload(output);
             return {
                 type: 'success',
                 data: JSON.parse(jsonPayload),
@@ -163,23 +164,5 @@ export class AnalysisService {
                 message: error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR,
             };
         }
-    }
-
-    /**
-     * Extract the JSON payload from stdout that may contain warnings or other noise.
-     * The script (gitingest-script.py) always wraps its JSON in these delimiters on a
-     * single code path, so a missing marker means the run produced no usable payload.
-     */
-    private static extractJsonPayload(output: string): string {
-        const startMarker = '__GITINGEST_JSON_START__';
-        const endMarker = '__GITINGEST_JSON_END__';
-        const startIdx = output.indexOf(startMarker);
-        const endIdx = output.indexOf(endMarker);
-
-        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-            return output.substring(startIdx + startMarker.length, endIdx).trim();
-        }
-
-        throw new Error('GitIngest did not return a recognizable result payload.');
     }
 }

@@ -68,6 +68,12 @@ describe('OsUtils', () => {
         assert.strictEqual(result, 'a/c');
     });
 
+    it('isAbsolutePosixPath detects POSIX and Windows drive roots', () => {
+        assert.strictEqual(OsUtils.isAbsolutePosixPath('/etc/passwd'), true);
+        assert.strictEqual(OsUtils.isAbsolutePosixPath('C:/Users/x'), true);
+        assert.strictEqual(OsUtils.isAbsolutePosixPath('src/utils/a.ts'), false);
+    });
+
     it('getPathSeparator returns backslash on Windows, slash elsewhere', () => {
         const sep = OsUtils.getPathSeparator();
         if (OsUtils.isWindows()) {

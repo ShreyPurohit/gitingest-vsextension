@@ -255,7 +255,10 @@ export function changedFolderChoices(uris: readonly vscode.Uri[]): string[] {
     const folders = new Set<string>();
     for (const uri of uris) {
         const rel = OsUtils.toPosixPath(vscode.workspace.asRelativePath(uri, false));
-        if (!rel || rel.startsWith('..') || rel === uri.fsPath) {
+        // Skip anything asRelativePath could not relativize (still absolute) or that
+        // escapes the workspace. Use OsUtils.isAbsolutePosixPath — not `rel === uri.fsPath`,
+        // which is slash-fragile across OSes after toPosixPath.
+        if (!rel || rel.startsWith('..') || OsUtils.isAbsolutePosixPath(rel)) {
             continue;
         }
         const segments = rel.split('/');
