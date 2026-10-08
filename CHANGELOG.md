@@ -10,6 +10,7 @@ Fixed
 
 - Ingesting a folder of changes from Source Control now includes **every** selected file, even when a filename contains spaces or commas (e.g. `component copy.js`). Previously such files were silently skipped and only files with no spaces were analyzed.
 - Fixed the Source Control folder picker not appearing on Linux in cases where the selected changes could not be identified by the editor.
+- Fixed intermittent **Analysis Failed** (`Unterminated string in JSON`) when the digest itself contained the result framing marker (common when analyzing this extension’s own repo).
 
 ---
 
